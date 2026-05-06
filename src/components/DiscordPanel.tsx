@@ -118,7 +118,6 @@ const fetchProfile = useCallback(async () => {
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
-// ✅ Baru useEffect di bawahnya
 useEffect(() => {
   fetchProfile();
   const interval = setInterval(fetchProfile, 5000);
@@ -291,7 +290,6 @@ useEffect(() => {
 
   return (
     <>
-      {/* Discord Glass Panel */}
       <div className="glass-container">
         <div className={`glass-panel status-${status}`}>
           <div className="avatar-wrapper">
@@ -350,10 +348,9 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Widgets */}
       <div className="widget-stack-container">
         <div className="widget-stack">
-          {/* Activity Widget */}
+
           <div id="activity-widget" className={`${hasActivity ? 'activity-active' : 'activity-inactive'} visible`}>
             {hasActivity ? (
               <>
@@ -390,7 +387,6 @@ useEffect(() => {
 
           <hr className={`widget-divider${hasActivity || true ? ' visible' : ''}`} id="widget-divider" />
 
-          {/* Spotify Widget */}
           <div id="spotify-widget"
             className={`${spotifyState} ${hasActivity ? 'has-activity' : ''}`}>
             {spotifyState === 'reconnecting' ? (

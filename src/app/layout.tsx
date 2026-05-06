@@ -10,11 +10,6 @@ export const metadata: Metadata = {
   description: 'Mine @ .//fvkid.xyz/',
   keywords: 'fvkid',
   authors: [{ name: 'Xiao' }],
-  icons: {
-    icon: '/images/UK-FLAG.webp',    
-    shortcut: '/images/UK-FLAG.webp',    
-    apple: '/images/UK-FLAG.webp',      
-  },
   openGraph: {
     title: 'fvkid.site',
     description: 'Mine @ .//fvkid.xyz/',
@@ -40,6 +35,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.fontshare.com" />
+        <link id="dynamic-favicon" rel="shortcut icon" href="/images/flags/UK-FLAG.webp" type="image/webp" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400&family=JetBrains+Mono:wght@400;500;600&display=swap"

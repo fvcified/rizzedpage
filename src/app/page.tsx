@@ -9,6 +9,7 @@ import DiscordPanel from '@/components/DiscordPanel';
 import Marquee from '@/components/Marquee';
 import AboutSection from '@/components/AboutSection';
 import Footer from '@/components/Footer';
+import TitleAnimator from '@/components/TitleAnimator';
 
 export default function Home() {
   useEffect(() => {
@@ -18,6 +19,7 @@ export default function Home() {
 
   return (
     <>
+      <TitleAnimator />
       <nav className="navbar">
         <Navbar />
       </nav>
