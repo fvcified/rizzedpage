@@ -9,18 +9,28 @@ export const metadata: Metadata = {
   title: 'rizzed page',
   description: 'A rizzed kid',
   authors: [{ name: 'Xiao Xli' }],
-  keywords: ["fvkid, rizzed"],
+  keywords: ['fvkid', 'rizzed'],
+  metadataBase: new URL('https://fvkid.xyz'),
   openGraph: {
     title: 'rizzed page',
     description: 'A rizzed kid',
     url: 'https://fvkid.xyz/',
-    images: ['https://fvkid.xyz/images/thumbnail.webp'],
+    siteName: 'fvkid.xyz',
+    images: [
+      {
+        url: '/images/thumbnail.webp',
+        width: 1200,
+        height: 630,
+        alt: 'rizzed page',
+      },
+    ],
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'rizzed page',
     description: 'A rizzed kid',
-    images: ['https://fvkid.xyz/images/thumbnail.webp'],
+    images: ['/images/thumbnail.webp'],
   },
 }
 
