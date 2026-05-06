@@ -299,7 +299,7 @@ useEffect(() => {
                 src={`https://cdn.discordapp.com/avatar-decoration-presets/${user.avatar_decoration_data.asset}.png`}
                 alt="Decoration" draggable={false} style={{ display: 'block' }} />
             )}
-            <img className="discord-status-dot" id="status-dot"
+            <img key={status} className="discord-status-dot" id="status-dot"
               src={statusIcons[status] || statusIcons.offline} alt={`Status: ${status}`} draggable={false} />
           </div>
           <div className="username-badge-wrapper">
