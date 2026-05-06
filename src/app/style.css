@@ -1879,9 +1879,7 @@ body.noscroll {
   gap: 2.5em;
 }
 
-.footer-icon,
-.footer-iconn,
-.footer-iconnn {
+.footer-icon {
   display: flex;
   position: relative;
   align-items: center;
@@ -1891,19 +1889,13 @@ body.noscroll {
   transition: transform 0.5s ease-out, opacity 1s ease-out;
 }
 
-.footer-icon.animate,
-.footer-iconn.animate,
-.footer-iconnn.animate {
+.footer-icon.animate {
   opacity: 1;
   transform: translateY(0);
 }
 
 .footer-icon img,
-.footer-icon svg,
-.footer-iconn img,
-.footer-iconn svg,
-.footer-iconnn img,
-.footer-iconnn svg {
+.footer-icon svg {
   width: 32px;
   height: 32px;
   opacity: 0.4;
@@ -1914,11 +1906,7 @@ body.noscroll {
 }
 
 .footer-icon:hover img,
-.footer-icon:hover svg,
-.footer-iconn:hover img,
-.footer-iconn:hover svg,
-.footer-iconnn:hover img,
-.footer-iconnn:hover svg {
+.footer-icon:hover svg {
   opacity: 1;
 }
 
@@ -2014,9 +2002,7 @@ body.noscroll {
     gap: 0.8em;
   }
   .footer-icons { gap: 2em; }
-  .footer-icon,
-  .footer-iconn,
-  .footer-iconnn {
+  .footer-icon {
     transform: translateY(15px);
   }
   .footer-copyright {
@@ -2032,7 +2018,6 @@ body.noscroll {
 }
 
 
-/* disable text selection on widgets */
 #activity-widget,
 #activity-widget *,
 #spotify-widget,
