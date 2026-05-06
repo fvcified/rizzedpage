@@ -434,10 +434,9 @@ export default function DiscordPanel() {
           </div>
 
           <hr className={`widget-divider${hasActivity || true ? ' visible' : ''}`} id="widget-divider" />
-
           <div
             id="spotify-widget"
-            className={`${spotifyState} ${hasActivity ? 'has-activity' : ''}`}
+            className={`${spotifyState} has-activity`}
           >
             {spotifyState === 'reconnecting' ? (
               <>
