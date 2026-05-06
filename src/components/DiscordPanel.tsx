@@ -41,8 +41,8 @@ function fmElapsed(ms: number) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  return `${m}:${String(sec).padStart(2,'0')}`;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
 function sanitizeText(text: string) {
@@ -55,7 +55,7 @@ function isValidSpotifyUrl(url: string) {
   try {
     const u = new URL(url);
     if (u.protocol !== 'https:') return false;
-    const allowed = ['i.scdn.co','scdn.co','googleusercontent.com','spotifycdn.com','spotify.com'];
+    const allowed = ['i.scdn.co', 'scdn.co', 'googleusercontent.com', 'spotifycdn.com', 'spotify.com'];
     return allowed.some(d => u.hostname.includes(d));
   } catch { return false; }
 }
@@ -84,8 +84,8 @@ export default function DiscordPanel() {
   const [elapsed, setElapsed] = useState('');
   const [spotify, setSpotify] = useState<SpotifyData | null>(null);
   const [spotifyState, setSpotifyState] = useState<'inactive' | 'active' | 'reconnecting'>('inactive');
-  const [progress, setProgress] = useState(0);
-  const [timeDisplay, setTimeDisplay] = useState('-:-- / -:--');
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const timeDisplayRef = useRef<HTMLSpanElement>(null);
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animFrameRef = useRef<number>(0);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,30 +99,30 @@ export default function DiscordPanel() {
   const spotifyTimestampsRef = useRef<{ start: number; end: number } | null>(null);
   const userIdRef = useRef<string>('');
 
-const fetchProfile = useCallback(async () => {
-  try {
-    const res = await fetch('/api/userAPI');
-    if (!res.ok) throw new Error('failed');
-    const data = await res.json();
-    const u = data.data.discord_user;
-    const s = data.data.discord_status;
-    const activities = data.data.activities;
-    setUser(u);
-    setStatus(s);
-    userIdRef.current = u.id;
-    renderActivity(activities);
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      loadSpotify(u.id);
-    }
-  } catch {}
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetch('/api/userAPI');
+      if (!res.ok) throw new Error('failed');
+      const data = await res.json();
+      const u = data.data.discord_user;
+      const s = data.data.discord_status;
+      const activities = data.data.activities;
+      setUser(u);
+      setStatus(s);
+      userIdRef.current = u.id;
+      renderActivity(activities);
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        loadSpotify(u.id);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-useEffect(() => {
-  fetchProfile();
-  const interval = setInterval(fetchProfile, 5000);
-  return () => clearInterval(interval);
-}, [fetchProfile]);
+  useEffect(() => {
+    fetchProfile();
+    const interval = setInterval(fetchProfile, 5000);
+    return () => clearInterval(interval);
+  }, [fetchProfile]);
 
   async function renderActivity(activities: Activity[]) {
     const act = activities?.find(a => a.type === 0 && a.application_id) || null;
@@ -133,7 +133,7 @@ useEffect(() => {
     if (act.assets?.large_image) {
       const li = act.assets.large_image;
       const url = li.startsWith('mp:external/')
-        ? `https://media.discordapp.net/${li.replace('mp:','')}`
+        ? `https://media.discordapp.net/${li.replace('mp:', '')}`
         : `https://cdn.discordapp.com/app-assets/${act.application_id}/${li}.png`;
       setActivityIcon(url);
       setActivityFallback(false);
@@ -146,7 +146,7 @@ useEffect(() => {
     if (act.assets?.small_image && act.application_id) {
       const si = act.assets.small_image;
       const url = si.startsWith('mp:external/')
-        ? `https://media.discordapp.net/${si.replace('mp:','')}`
+        ? `https://media.discordapp.net/${si.replace('mp:', '')}`
         : `https://cdn.discordapp.com/app-assets/${act.application_id}/${si}.png`;
       setActivitySmallIcon(url);
     } else { setActivitySmallIcon(''); }
@@ -163,7 +163,9 @@ useEffect(() => {
     isConnectingRef.current = true;
     if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null; }
     if (wsRef.current) {
-      wsRef.current.onclose = null; wsRef.current.onerror = null; wsRef.current.onmessage = null;
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
       try { wsRef.current.close(); } catch {}
     }
 
@@ -235,7 +237,8 @@ useEffect(() => {
           const duration = sp.timestamps.end - sp.timestamps.start;
           fallbackTimerRef.current = setTimeout(() => {
             setSpotifyState('inactive');
-            lastTrackIdRef.current = null; lastStartRef.current = null;
+            lastTrackIdRef.current = null;
+            lastStartRef.current = null;
           }, duration + 3000);
           updProgress(sp.timestamps);
         } else {
@@ -244,7 +247,8 @@ useEffect(() => {
           if (lastTrackIdRef.current !== null) {
             fallbackTimerRef.current = setTimeout(() => {
               setSpotifyState('inactive');
-              lastTrackIdRef.current = null; lastStartRef.current = null;
+              lastTrackIdRef.current = null;
+              lastStartRef.current = null;
             }, 3000);
           } else {
             setSpotifyState('inactive');
@@ -255,20 +259,27 @@ useEffect(() => {
   }
 
   function updProgress(ts: { start: number; end: number }) {
+    cancelAnimationFrame(animFrameRef.current);
+
     const tick = () => {
       const now = Date.now();
+      const dur = ts.end - ts.start;
+
       if (now >= ts.end) {
-        const dur = ts.end - ts.start;
-        setProgress(100);
-        setTimeDisplay(`${fmTime(dur)} / ${fmTime(dur)}`);
+        if (progressBarRef.current) progressBarRef.current.style.width = '100%';
+        if (timeDisplayRef.current) timeDisplayRef.current.textContent = `${fmTime(dur)} / ${fmTime(dur)}`;
         return;
       }
-      const elapsed = now - ts.start;
-      const dur = ts.end - ts.start;
-      setProgress(Math.min((elapsed / dur) * 100, 100));
-      setTimeDisplay(`${fmTime(elapsed)} / ${fmTime(dur)}`);
+
+      const elapsedMs = now - ts.start;
+      const pct = Math.min((elapsedMs / dur) * 100, 100);
+
+      if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`;
+      if (timeDisplayRef.current) timeDisplayRef.current.textContent = `${fmTime(elapsedMs)} / ${fmTime(dur)}`;
+
       animFrameRef.current = requestAnimationFrame(tick);
     };
+
     animFrameRef.current = requestAnimationFrame(tick);
   }
 
@@ -295,12 +306,22 @@ useEffect(() => {
           <div className="avatar-wrapper">
             <img className="avatar" src={avatarURL} alt="Discord Avatar" draggable={false} />
             {user?.avatar_decoration_data?.asset && (
-              <img className="avatar-decoration"
+              <img
+                className="avatar-decoration"
                 src={`https://cdn.discordapp.com/avatar-decoration-presets/${user.avatar_decoration_data.asset}.png`}
-                alt="Decoration" draggable={false} style={{ display: 'block' }} />
+                alt="Decoration"
+                draggable={false}
+                style={{ display: 'block' }}
+              />
             )}
-            <img key={status} className="discord-status-dot" id="status-dot"
-              src={statusIcons[status] || statusIcons.offline} alt={`Status: ${status}`} draggable={false} />
+            <img
+              key={status}
+              className="discord-status-dot"
+              id="status-dot"
+              src={statusIcons[status] || statusIcons.offline}
+              alt={`Status: ${status}`}
+              draggable={false}
+            />
           </div>
           <div className="username-badge-wrapper">
             <span className="discord-username" id="display-name" data-user-id={user?.id}>
@@ -362,24 +383,51 @@ useEffect(() => {
                       </svg>
                     </div>
                   ) : (
-                    <img id="activity-icon" src={activityIcon} alt="Activity Icon" loading="lazy"
-                      onError={() => setActivityFallback(true)} />
+                    <img
+                      id="activity-icon"
+                      src={activityIcon}
+                      alt="Activity Icon"
+                      loading="lazy"
+                      onError={() => setActivityFallback(true)}
+                    />
                   )}
                   {activitySmallIcon && (
-                    <img className="activity-small-icon" src={activitySmallIcon} alt="" loading="lazy"
-                      style={{ display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    <img
+                      className="activity-small-icon"
+                      src={activitySmallIcon}
+                      alt=""
+                      loading="lazy"
+                      style={{ display: 'block' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
                   )}
                 </div>
                 <div className="activity-info" style={{ display: 'flex' }}>
                   <span className="activity-label">Playing</span>
                   <div id="activity-name">{sanitizeText(activity.name || 'Unknown')}</div>
-                  {activity.details && <div id="activity-details" style={{ display: 'block' }}>{sanitizeText(activity.details)}</div>}
-                  {activity.state && <div id="activity-state" style={{ display: 'block' }}>{sanitizeText(activity.state)}</div>}
-                  {elapsed && <div id="activity-elapsed" style={{ display: 'block' }}>{elapsed}</div>}
+                  {activity.details && (
+                    <div id="activity-details" style={{ display: 'block' }}>{sanitizeText(activity.details)}</div>
+                  )}
+                  {activity.state && (
+                    <div id="activity-state" style={{ display: 'block' }}>{sanitizeText(activity.state)}</div>
+                  )}
+                  {elapsed && (
+                    <div id="activity-elapsed" style={{ display: 'block' }}>{elapsed}</div>
+                  )}
                 </div>
               </>
             ) : (
-              <div id="activity-off-status" style={{ display: 'flex', width: '38%', textAlign: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.39)', fontStyle: 'italic' }}>
+              <div
+                id="activity-off-status"
+                style={{
+                  display: 'flex',
+                  width: '38%',
+                  textAlign: 'center',
+                  justifyContent: 'center',
+                  color: 'rgba(255,255,255,0.39)',
+                  fontStyle: 'italic',
+                }}
+              >
                 Currently not doin&apos; anythin&apos;
               </div>
             )}
@@ -387,31 +435,45 @@ useEffect(() => {
 
           <hr className={`widget-divider${hasActivity || true ? ' visible' : ''}`} id="widget-divider" />
 
-          <div id="spotify-widget"
-            className={`${spotifyState} ${hasActivity ? 'has-activity' : ''}`}>
+          <div
+            id="spotify-widget"
+            className={`${spotifyState} ${hasActivity ? 'has-activity' : ''}`}
+          >
             {spotifyState === 'reconnecting' ? (
               <>
                 <div className="reconnecting-spinner" id="reconnecting-spinner"></div>
-                <div className="reconnecting-text" style={{ display: 'block' }}>Hop in, loading tunes. Please hold and give me a sec...</div>
+                <div className="reconnecting-text" style={{ display: 'block' }}>
+                  Hop in, loading tunes. Please hold and give me a sec...
+                </div>
               </>
             ) : spotifyState === 'inactive' || !spotify ? (
-              <div id="off-status" style={{ display: 'block' }}>Currently not listenin&apos; anythin&apos;</div>
+              <div id="off-status" style={{ display: 'block' }}>
+                Currently not listenin&apos; anythin&apos;
+              </div>
             ) : (
               <>
-                <img id="album-art" src={spotify.album_art_url} alt="Album Art" loading="lazy" draggable={false} style={{ display: 'block' }} />
+                <img
+                  id="album-art"
+                  src={spotify.album_art_url}
+                  alt="Album Art"
+                  loading="lazy"
+                  draggable={false}
+                  style={{ display: 'block' }}
+                />
                 <div className="song-info" style={{ display: 'flex' }}>
                   <div id="song-name">{sanitizeText(spotify.song)}</div>
                   <div id="artist-name">{sanitizeText(spotify.artist)}</div>
                   <div className="progress-container">
-                    <div id="progress-bar" style={{ width: `${progress}%` }}></div>
+                    <div id="progress-bar" ref={progressBarRef} style={{ width: '0%' }}></div>
                   </div>
                   <div className="time-wrapper">
-                    <span id="time-display">{timeDisplay}</span>
+                    <span id="time-display" ref={timeDisplayRef}>-:-- / -:--</span>
                   </div>
                 </div>
               </>
             )}
           </div>
+
         </div>
       </div>
     </>
