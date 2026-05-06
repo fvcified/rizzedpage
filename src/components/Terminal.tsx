@@ -152,7 +152,6 @@ export default function Terminal() {
     if (containsHTML(sanitized)) { addLine('⚠️ HTML content blocked', 'muted'); await reportIncident('XSS_ATTEMPT', raw); return; }
     if (rateLimiter.isLimited('terminal-input')) { addLine('⚠️ Too many commands. Please wait.', 'muted'); return; }
 
-    // Double hash check like script.js
     if (inputHash === ADM_HASH) {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       addLine('Remote DB: Supabase Connected', 'success');
