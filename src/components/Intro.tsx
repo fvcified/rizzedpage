@@ -93,7 +93,7 @@ export default function Intro() {
 
     runSequence();
 
-  const icons = ['/images/UK-FLAG.webp', '/images/CN-FLAG.webp'];
+  const icons = ['/images/flags/UK-FLAG.webp', '/images/flags/CN-FLAG.webp'];
   let iconIndex = 0;
   let faviconTimer: ReturnType<typeof setTimeout>;
   function getFavicon() {
