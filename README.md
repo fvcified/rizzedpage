@@ -1,4 +1,4 @@
-<h align="center">A rizzed page</h>
+<h1 align="center">A rizzed page</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
