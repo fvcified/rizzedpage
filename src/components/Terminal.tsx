@@ -77,6 +77,7 @@ type Line = { html: string; type: string };
 
 export default function Terminal() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [lines, setLines] = useState<Line[]>([{ html: '<span class="terminal-highlight">./helpme</span> for help you', type: '' }]);
   const [inputVal, setInputVal] = useState('');
   const outputRef = useRef<HTMLDivElement>(null);
@@ -114,6 +115,20 @@ export default function Terminal() {
     if (vinput) vinput.value = String(v);
   }
 
+  function openTerminal() {
+    setIsOpen(true);
+    setIsClosing(false);
+    setTimeout(() => inputRef.current?.focus(), 350);
+  }
+
+  function closeTerminal() {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 300);
+  }
+
   async function handleCmd(raw: string) {
     const sanitized = validateInput(raw, 100);
     const trimmed = sanitized.trim().toLowerCase();
@@ -136,6 +151,14 @@ export default function Terminal() {
     if (containsSQLI(sanitized)) { addLine('⚠️ Dangerous input blocked', 'muted'); await reportIncident('SQLI_ATTEMPT', raw); return; }
     if (containsHTML(sanitized)) { addLine('⚠️ HTML content blocked', 'muted'); await reportIncident('XSS_ATTEMPT', raw); return; }
     if (rateLimiter.isLimited('terminal-input')) { addLine('⚠️ Too many commands. Please wait.', 'muted'); return; }
+
+    // Double hash check like script.js
+    if (inputHash === ADM_HASH) {
+      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine('Remote DB: Supabase Connected', 'success');
+      addLine('Admin Session: Authorized', 'success');
+      return;
+    }
 
     if (trimmed === './adm1n') {
       awaitingAdminRef.current = true;
@@ -178,10 +201,38 @@ export default function Terminal() {
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./reset</span> ; reset to default', 'dim');
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./clear</span> ; clear the terminal', 'dim');
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./exit</span> ; close the terminal', 'dim');
+
     } else if (trimmed === './browse') {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       addLine('Browsing...', 'dim');
+
+      let browseTriggered = true;
+      if (fileInputRef.current) fileInputRef.current.value = '';
+
+      const escHandler = (e: KeyboardEvent) => {
+        if (!browseTriggered) return;
+        if (e.key === 'Escape') {
+          browseTriggered = false;
+          addLine('Browse cancelled', 'muted');
+          window.removeEventListener('keydown', escHandler);
+        }
+      };
+
+      const focusHandler = () => {
+        if (!browseTriggered) return;
+        setTimeout(() => {
+          if (!fileInputRef.current?.files?.[0] && browseTriggered) {
+            browseTriggered = false;
+            addLine('Browse cancelled', 'muted');
+          }
+          window.removeEventListener('focus', focusHandler);
+        }, 100);
+      };
+
+      window.addEventListener('keydown', escHandler);
+      window.addEventListener('focus', focusHandler);
       fileInputRef.current?.click();
+
     } else if (trimmed === './play') {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
@@ -189,15 +240,18 @@ export default function Terminal() {
         audio.play().then(() => addLine(`▶ Playing${loadedFileNameRef.current ? ': ' + escapeHTML(loadedFileNameRef.current) : ''}`, 'success'))
           .catch(() => addLine('Failed to play audio', 'muted'));
       } else { addLine('No audio loaded. Try to ./browse', 'muted'); }
+
     } else if (trimmed === './pause') {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       getAudio()?.pause();
       addLine('⏸ Paused', 'bright');
+
     } else if (trimmed === './stop') {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio) { audio.pause(); audio.currentTime = 0; }
       addLine('⏹ Stopped', 'bright');
+
     } else if (trimmed === './reset') {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
@@ -208,6 +262,7 @@ export default function Terminal() {
         updateVolume(100);
         audio.play().then(() => addLine('Successfully reset to default', 'success'));
       }
+
     } else if (trimmed.startsWith('./volume')) {
       const parts = trimmed.split(' ');
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
@@ -219,10 +274,13 @@ export default function Terminal() {
         if (!isNaN(val) && val >= 0 && val <= 100) { updateVolume(val); addLine(`Volume set to ${val}%`, 'success'); }
         else { addLine('Usage: ./volume {0-100}', 'muted'); }
       }
+
     } else if (trimmed === './clear') {
       setLines([]);
+
     } else if (trimmed === './exit') {
-      setIsOpen(false);
+      closeTerminal();
+
     } else {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(trimmed)}`);
       addLine(`⚠️ Command not found: <span class="terminal-bright">${escapeHTML(trimmed)}</span><br>I will <span class="terminal-bright">help you</span>, <span class="terminal-bright">just</span> try <span class="terminal-bright">./helpme</span> then`, 'muted');
@@ -242,7 +300,7 @@ export default function Terminal() {
         id="terminal-toggle"
         aria-label="Toggle Terminal"
         style={{ display: 'flex' }}
-        onClick={() => setIsOpen(true)}
+        onClick={openTerminal}
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="4 17 10 11 4 5"></polyline>
@@ -250,7 +308,11 @@ export default function Terminal() {
         </svg>
       </button>
 
-      <div className={`terminal-container${isOpen ? ' visible' : ''}`} id="terminal-container">
+      <div
+        className={`terminal-container${isOpen ? ' visible' : ''}${isClosing ? ' closing' : ''}`}
+        id="terminal-container"
+        style={{ display: isOpen ? 'flex' : 'none' }}
+      >
         <div className="terminal-header">
           <div className="terminal-dots">
             <span className="dot dot-red"></span>
@@ -258,7 +320,7 @@ export default function Terminal() {
             <span className="dot dot-green"></span>
           </div>
           <div className="terminal-title">fvkid@siterminal</div>
-          <button className="terminal-close" onClick={() => setIsOpen(false)} aria-label="Close terminal">
+          <button className="terminal-close" onClick={closeTerminal} aria-label="Close terminal">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -290,7 +352,7 @@ export default function Terminal() {
                 if (cmd) await handleCmd(cmd);
                 setInputVal('');
               }
-              if (e.key === 'Escape') setIsOpen(false);
+              if (e.key === 'Escape') closeTerminal();
             }}
           />
         </div>
