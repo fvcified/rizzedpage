@@ -2,24 +2,24 @@ import type { Metadata, Viewport } from 'next'
 import './style.css'
 
 export const viewport: Viewport = {
-  themeColor: '#010101',
+  themeColor: '#6E0F1A',
 }
 
 export const metadata: Metadata = {
-  title: 'rizzed',
-  description: 'Mine @ .//fvkid.xyz/',
-  keywords: 'fvkid',
-  authors: [{ name: 'Xiao' }],
+  title: 'rizzed page',
+  description: 'A rizzed kid',
+  authors: [{ name: 'Xiao Xli' }],
+  keywords: ["fvkid, rizzed"],
   openGraph: {
-    title: 'fvkid.site',
-    description: 'Mine @ .//fvkid.xyz/',
+    title: 'rizzed page',
+    description: 'A rizzed kid',
     url: 'https://fvkid.xyz/',
     images: ['https://fvkid.xyz/images/thumbnail.webp'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'fvkid',
-    description: 'Mine @ .//fvkid.xyz/',
+    title: 'rizzed page',
+    description: 'A rizzed kid',
     images: ['https://fvkid.xyz/images/thumbnail.webp'],
   },
 }
