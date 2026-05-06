@@ -202,7 +202,7 @@ export default function Terminal() {
       addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio) {
-        audio.src = '/audio/teeth_youu.mp3';
+        audio.src = '/audio/what-r-we-posed-to-b.mp3';
         audio.loop = true;
         loadedFileNameRef.current = null;
         updateVolume(100);
