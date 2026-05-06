@@ -9,6 +9,6 @@
 
 <p align="center">
   <a href="https://github.com/Phineas/lanyard">
-    <img src="https://storage.googleapis.com/lanyard/static/lanyardtemplogo.png" height="28" />
+    <img src="https://storage.googleapis.com/lanyard/static/lanyardtemplogo.png" height="36" />
   </a>
 </p>
