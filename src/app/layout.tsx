@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description: 'Mine @ .//fvkid.xyz/',
   keywords: 'fvkid',
   authors: [{ name: 'Xiao' }],
+  icons: {
+    icon: '/images/UK-FLAG.webp',    
+    shortcut: '/images/UK-FLAG.webp',    
+    apple: '/images/UK-FLAG.webp',      
+  },
   openGraph: {
     title: 'fvkid.site',
     description: 'Mine @ .//fvkid.xyz/',

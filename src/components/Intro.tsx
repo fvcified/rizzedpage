@@ -92,7 +92,37 @@ export default function Intro() {
     }
 
     runSequence();
-  }, []);
+
+  const icons = ['/images/UK-FLAG.webp', '/images/CN-FLAG.webp'];
+  let iconIndex = 0;
+  let faviconTimer: ReturnType<typeof setTimeout>;
+  function getFavicon() {
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    return link;
+  }
+
+  function loopFavicon() {
+    const favicon = getFavicon();
+    if (stableEl.textContent && stableEl.textContent.length > 0) {
+      iconIndex = (iconIndex + 1) % icons.length;
+      favicon.href = icons[iconIndex];
+    } else {
+      favicon.href = icons[0];
+    }
+    faviconTimer = setTimeout(loopFavicon, 2000);
+  }
+
+  loopFavicon();
+
+  return () => {
+    clearTimeout(faviconTimer);
+  };
+}, []);
 
   function handleClick() {
     const intro = introRef.current;
