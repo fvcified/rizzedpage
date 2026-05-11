@@ -6,7 +6,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'rizzed page',
+  title: 'rizzedpage',
   description: 'A rizzed kid',
   authors: [{ name: 'Xiao Xli' }],
   keywords: ['fvkid', 'rizzed'],
