@@ -80,7 +80,7 @@ export default function VolumeControl() {
         hideControls();
       }}
     >
-      <audio id="site-audio" src="/audio/what-r-we-posed-to-b.mp3" preload="auto" loop />
+      <audio id="site-audio" src="/audio/godlike.mp3" preload="auto" loop />
 
       <button className="volume-btn" id="volume-btn" aria-label="Toggle mute"
         onClick={() => {
