@@ -997,6 +997,10 @@ body.noscroll {
   font-family: 'sans-serif', Inter;
   font-weight: bold;
   position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   bottom: calc(100% + 8px);
   left: 50%;
   padding: 10px 20px;
@@ -1298,6 +1302,8 @@ body.noscroll {
   border-radius: 13px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   gap: 4px;
   background: rgb(19, 19, 19);
@@ -2183,7 +2189,7 @@ body.noscroll {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%) translateY(4px);
+
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.13);
   padding: 0.3rem 0.6rem;
@@ -2193,6 +2199,7 @@ body.noscroll {
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
+  transform: translateX(-50%) translateY(4px);
   transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
   z-index: 1000;
   font-weight: 500;
