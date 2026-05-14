@@ -540,6 +540,7 @@ img {
     right: 1rem;
     bottom: 1rem;
   }
+  
   .terminal-toggle {
     right: 1.25rem;
     bottom: 1.25rem;
@@ -818,10 +819,12 @@ body.noscroll {
     flex-direction: column;
     width: auto;
   }
+
   .navbar-menu {
     flex-direction: column;
     gap: 2rem;
   }
+
   .navbar-link {
     font-size: 1rem;
     padding: 0.5rem 0.8rem;
@@ -872,7 +875,6 @@ body.noscroll {
   z-index: 11;
   overflow: visible;
   pointer-events: auto;
-  isolation: isolate;
   transition: box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out, background 0.3s ease-in-out;
 }
 
@@ -976,6 +978,7 @@ body.noscroll {
   flex-wrap: nowrap;
   flex: 1;
   min-width: 0;
+  overflow: visible;
 }
 
 .discord-username {
@@ -1003,13 +1006,20 @@ body.noscroll {
   border-right: none;
   border-left: none;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .badge-icons {
   position: relative;
   display: inline-block;
   align-items: center;
-  isolation: isolate;
+  isolation: auto;
+  outline: none;
+  z-index: 0;
+}
+
+.badge-icons:hover {
+  z-index: 100;
 }
 
 .badge-icons svg {
@@ -1019,6 +1029,7 @@ body.noscroll {
   color: rgb(255, 255, 255);
   display: block;
   cursor: default;
+  tabindex: 0;
 }
 
 .badge-icons .textBubble,
@@ -1038,16 +1049,32 @@ body.noscroll {
   color: rgb(255, 255, 255);
   font-size: 0.80rem;
   opacity: 0;
-  pointer-events: auto;
-  transition: opacity 0.2s ease-in-out;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(4px);
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
   z-index: 3;
   text-align: center;
   white-space: nowrap;
 }
 
+.badge-icons:hover .textBubble,
+.badge-icons:hover #textBubble {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .badge-icons svg:hover ~ .textBubble,
 .badge-icons svg:hover ~ #textBubble {
   opacity: 1;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+@media (hover: none) {
+  .badge-icons:focus-within .textBubble,
+  .badge-icons:focus-within #textBubble {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1056,6 +1083,7 @@ body.noscroll {
     height: auto;
     min-height: 400px;
   }
+
   .glass-panel {
     flex-direction: column;
     width: 100%;
@@ -1065,21 +1093,25 @@ body.noscroll {
     height: auto;
     gap: 1.5rem;
   }
+
   .avatar-wrapper {
     margin: 0 auto 0.5rem auto;
     width: 80px;
     height: 80px;
   }
+
   .username-badge-wrapper {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
     width: 100%;
   }
+
   .discord-username {
     font-size: 1.75rem;
     text-align: center;
   }
+
   .badge-bubble {
     justify-content: center;
     flex-wrap: wrap;
@@ -1094,6 +1126,7 @@ body.noscroll {
     margin: 1.5rem auto;
     padding: 1.5rem 1rem;
   }
+
   .discord-username { font-size: 1.5rem; }
 }
 
@@ -1103,6 +1136,7 @@ body.noscroll {
     margin: 1rem auto;
     padding: 1.25rem 0.75rem;
   }
+
   .avatar-wrapper { width: 70px; height: 70px; }
   .discord-status-dot { width: 15px; height: 15px; }
   .discord-username { font-size: 1.35rem; }
@@ -1168,6 +1202,17 @@ body.noscroll {
   cursor: pointer;
 }
 
+.activity-icon-wrapper:hover > .media-tooltip {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.activity-icon-wrapper:has(.activity-small-icon-wrapper:hover) > .media-tooltip {
+  opacity: 0 !important;
+  transform: translateX(-50%) translateY(4px) !important;
+  transition: none !important;
+}
+
 .album-art-wrapper img,
 .activity-icon-wrapper img,
 .activity-icon-wrapper .activity-icon-fallback {
@@ -1205,14 +1250,24 @@ body.noscroll {
 #spotify-widget.active {
   border-color: #1db954 !important;
   pointer-events: auto;
+  overflow: visible !important;
+}
+
+#spotify-widget.active .album-art-wrapper {
+  overflow: visible !important;
+  z-index: 20;
+}
+
+.album-art-wrapper:hover .media-tooltip {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
 }
 
 .media-tooltip {
   font-family: 'Outfit', sans-serif;
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%) translateY(4px);
   padding: 9px 15px;
   border-radius: 13px;
   display: flex;
@@ -1226,6 +1281,7 @@ body.noscroll {
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
+  transform: translateX(-50%) translateY(4px);
   transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
@@ -1241,9 +1297,14 @@ body.noscroll {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.album-art-wrapper:hover .media-tooltip,
-.activity-icon-wrapper:hover .media-tooltip {
+.activity-small-icon-wrapper:hover .media-tooltip--small {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.activity-small-icon-wrapper:hover ~ .media-tooltip {
+  opacity: 0 !important;
+  transform: translateX(-50%) translateY(0) !important;
 }
 
 
@@ -1320,26 +1381,47 @@ body.noscroll {
   display: none;
 }
 
+.activity-small-icon-wrapper {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  z-index: 5;
+  overflow: visible;
+}
+
+.activity-small-icon-wrapper .activity-small-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: #1e1e1e;
+  outline: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+.activity-small-icon-wrapper .media-tooltip--small {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  right: auto;
+}
+
+.activity-small-icon-wrapper:hover .media-tooltip--small {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.activity-small-icon-wrapper .media-tooltip {
+  bottom: calc(100% + 8px);
+  left: 50%;
+}
+
 #activity-icon {
   width: 67px;
   height: 67px;
   border-radius: 10px;
   object-fit: cover;
   display: block;
-}
-
-.activity-small-icon {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  bottom: -4px;
-  right: -4px;
-  object-fit: cover;
-  display: none;
-  z-index: 4;
-  background: #1e1e1e;
-  outline: 2px solid rgba(0, 0, 0, 0.5);
 }
 
 .activity-icon-fallback {
@@ -1372,11 +1454,11 @@ body.noscroll {
 }
 
 .activity-label {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  text-transform: none;
+  letter-spacing: 0.04em;
   margin-bottom: 2px;
 }
 
@@ -1470,6 +1552,8 @@ body.noscroll {
 #spotify-widget:not(.hidden) {
   max-height: 300px;
   opacity: 1;
+  pointer-events: auto;
+  overflow: visible;
 }
 
 #spotify-widget.has-activity { border-radius: 0 0 20px 20px; }
@@ -1618,6 +1702,7 @@ body.noscroll {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
+
 @keyframes swipe {
   0%   { background-position: 100% 0%; }
   100% { background-position: -300% 0%; }
@@ -1665,12 +1750,14 @@ body.noscroll {
     padding: 0 1rem;
     box-sizing: border-box;
   }
+  
   .widget-stack {
     width: 100%;
     max-width: calc(100% - 2rem);
     margin: 0 auto;
     align-items: stretch;
   }
+
   #activity-widget {
     width: 100%;
     min-height: 90px;
@@ -1678,6 +1765,7 @@ body.noscroll {
     padding: 1.25rem 1rem;
     border-radius: 20px 20px 0 0;
   }
+
   #activity-widget.visible { min-height: 90px; }
   #activity-icon { width: 59px; height: 59px; }
   .activity-icon-fallback { width: 59px; height: 59px; }
@@ -1696,7 +1784,6 @@ body.noscroll {
     border-radius: 20px;
   }
 
-  #spotify-widget.active { overflow: visible !important; }
   #spotify-widget.has-activity { border-radius: 0 0 20px 20px; }
   #spotify-widget #album-art {
     width: 59px;
@@ -2068,9 +2155,9 @@ body.noscroll {
 
 .copyright-link .tooltip-bubble {
   position: absolute;
-  bottom: 40%;
+  bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%) translateY(-14px);
+  transform: translateX(-50%) translateY(4px);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.13);
   padding: 0.3rem 0.6rem;
@@ -2085,7 +2172,10 @@ body.noscroll {
   font-weight: 500;
 }
 
-.copyright-link:hover .tooltip-bubble { opacity: 1; }
+.copyright-link:hover .tooltip-bubble { 
+  opacity: 1; 
+  transform: translateX(-50%) translateY(0);
+}
 
 .wipe-mask {
   position: absolute;
@@ -2103,10 +2193,12 @@ body.noscroll {
     gap: 1rem;
     padding-bottom: 60px;
   }
+
   .footer-content {
     flex-direction: column;
     gap: 0.8em;
   }
+
   .footer-icons { gap: 2em; }
   .footer-icon { transform: translateY(15px); }
   .footer-copyright {
