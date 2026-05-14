@@ -125,7 +125,7 @@ function getSmallIconTooltip(activity: Activity): string | null {
     } catch { appIconCache[appId] = null; return null; }
   }
 
-  export default function DiscordPanel() {
+  export default function DiscordPresence() {
     const [user, setUser] = useState<DiscordUser | null>(null);
     const [status, setStatus] = useState('offline');
     const [activity, setActivity] = useState<Activity | null>(null);

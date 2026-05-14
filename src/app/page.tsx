@@ -5,7 +5,7 @@ import Intro from '@/components/Intro';
 import Navbar from '@/components/Navbar';
 import VolumeControl from '@/components/VolumeControl';
 import Terminal from '@/components/Terminal';
-import DiscordPanel from '@/components/DiscordPanel';
+import DiscordPresence from '@/components/Discord';
 import Marquee from '@/components/Marquee';
 import AboutSection from '@/components/AboutSection';
 import Footer from '@/components/Footer';
@@ -30,7 +30,7 @@ export default function Home() {
             <Intro />
             <VolumeControl />
             <Terminal />
-            <DiscordPanel />
+            <DiscordPresence />
           </div>
         </section>
         <div className="about-space"></div>
