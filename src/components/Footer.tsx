@@ -8,8 +8,8 @@ const SCRAMBLE_PLC = 2;
 const SCRAMBLE_SPD = 65;
 
 const txts = [
-  "Hopped", "Greetings outta me", "I'ma Nyc Xiao", "fvnLey Kids",
-  "Fvkid's Wills", "#On Fvncy", "#On Life of Riley", "#On FireW", "Cheers"
+  "Hopped", "Greetings outta me", "I'ma Nyc Xiao", "fvn & Ley Kids",
+  "#On Fvncy", "#On Life of Riley", "#On FireW", "Ma Will's", "Cheers"
 ];
 
 function randomChar() {

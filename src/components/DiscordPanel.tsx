@@ -60,27 +60,27 @@
       }
     }
 
-    return { title: activity.name };
+    return { title: activity.name, sub: activity.details, };
   }
 
-  function getSmallIconTooltip(activity: Activity): string | null {
-    const id = activity.application_id ?? '';
-    const isVSCode =
-      VSCODE_IDS.includes(id) ||
-      /visual studio code/i.test(activity.name) ||
-      activity.name === 'Code';
+function getSmallIconTooltip(activity: Activity): string | null {
+  const id = activity.application_id ?? '';
+  const isVSCode =
+    VSCODE_IDS.includes(id) ||
+    /visual studio code/i.test(activity.name) ||
+    activity.name === 'Code';
 
-    if (!isVSCode) return null;
+  if (!isVSCode) return null;
 
-    const details = activity.details ?? '';
-    const state = activity.state ?? '';
+  const details = activity.details ?? '';
+  const state = activity.state ?? '';
 
-    if (/^[Ii]dling$/i.test(details) || /^[Ii]dling$/i.test(state)) {
-      return 'Idling';
-    }
+  if (/^[Ii]dling$/i.test(details) || /^[Ii]dling$/i.test(state)) return 'Idling';
+  if (/not in a file/i.test(details) || /not in a file/i.test(state)) return 'Snoozin...';
 
-    return 'Visual Studio Code';
-  }
+  return 'Visual Studio Code';
+}
+   
 
   function fmTime(ms: number) {
     const s = Math.floor(ms / 1000);
@@ -96,7 +96,7 @@
     return `${m}:${String(sec).padStart(2, '0')}`;
   }
 
-  function sanitizeText(text: string) {
+  function sanitizeText(text?: string) {
     if (!text) return '';
     if (/<script|javascript:|on\w+\s*=/i.test(text)) return '';
     return text.replace(/\0/g, '').substring(0, 200).trim();
@@ -371,7 +371,10 @@
             </div>
             <div className="username-badge-wrapper">
               <span className="discord-username" id="display-name" data-user-id={user?.id}>
-                {user?.display_name || user?.username || 'Error 404'}
+                {user?.display_name || user?.username || 'Err 404'}
+                <div className="username-tooltip">
+                  {user?.username ? `@${user.username}` : ''}  
+                </div>
               </span>
               <div className="badge-bubble">
                 <div className="badge-icons" tabIndex={0}>
@@ -380,7 +383,7 @@
                 </div>
                 <div className="badge-icons" tabIndex={0}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clipRule="evenodd" /></svg>
-                  <div id="textBubble">fvnLey Kids</div>
+                  <div id="textBubble">fvn & Ley</div>
                 </div>
                 <div className="badge-icons" tabIndex={0}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="2.3 2 19.39 20" fill="currentColor"><path d="m16.06 13.09l5.63 5.59l-3.32 3.28l-5.59-5.59v-.92l2.36-2.36h.92m.91-2.53L16 9.6l-4.79 4.8v1.97L5.58 22L2.3 18.68l5.59-5.59h1.97l.78-.78L6.8 8.46H5.5L2.69 5.62L5.31 3l2.8 2.8v1.31L12 10.95l2.66-2.66l-.96-1.01L15 5.97h-2.66l-.65-.65L15 2l.66.66v2.66L16.97 4l3.28 3.28c1.09 1.1 1.09 2.89 0 3.98l-1.97-2.01l-1.31 1.31Z" /></svg>
@@ -457,16 +460,19 @@
                       );
                     })()}
                     {(() => {
-                      const { title } = getActivityTooltip(activity);
+                      const { title, sub } = getActivityTooltip(activity);
+                      const isNotInFile = /not in a file/i.test(activity.details ?? '') || 
+                                          /not in a file/i.test(activity.state ?? '');
+                      if (activityFallback || !activityIcon || isNotInFile) return null;
                       return (
                         <div className="media-tooltip">
                           <span className="media-tooltip-title">{sanitizeText(title)}</span>
+                          <span className="media-tooltip-sub">{sanitizeText(sub)}</span>
                         </div>
                       );
                     })()}
                   </div>
                   <div className="activity-info" style={{ display: 'flex' }}>
-                    {/* Fix #3: hapus text-transform uppercase di CSS, label cukup "Playing" */}
                     <span className="activity-label">Playing</span>
                     <div id="activity-name">{sanitizeText(activity.name || 'Unknown')}</div>
                     {activity.details && (
