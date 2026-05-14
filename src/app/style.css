@@ -1156,7 +1156,7 @@ body.noscroll {
 /* activity */
 
 #activity-widget {
-  display: flex;
+  display: inline-flex;
   position: relative;
   width: 100%;
   height: auto;
@@ -1268,9 +1268,12 @@ body.noscroll {
 }
 
 .activity-info {
+  width: fit-content;
+  min-width: 0;
   display: none;
   flex-direction: column;
   justify-content: center;
+  align-items: flex-start;
   flex: 1;
   overflow: hidden;
   gap: 2px;
@@ -1413,8 +1416,10 @@ body.noscroll {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  align-items: flex-start; 
   flex: 1;
   overflow: hidden;
+  width: fit-content;  
 }
 
 #spotify-widget #song-name {
@@ -1615,6 +1620,7 @@ body.noscroll {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: fit-content;
     max-width: 100%;
   }
   #spotify-widget #song-name { font-size: 1rem; }
@@ -2048,4 +2054,21 @@ body.noscroll {
 * {
   scrollbar-width: thin;
   scrollbar-color: #262626 #000000;
+}
+
+#song-name,
+#artist-name,
+#time-display,
+#off-status,
+#activity-name,
+#activity-details,
+#activity-state,
+#activity-elapsed,
+#activity-off-status,
+.activity-label,
+.reconnecting-text {
+  cursor: text !important;
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: none !important;
 }
