@@ -109,8 +109,6 @@ export default function Footer() {
         </h2>
 
         <div className="footer-icons">
-
-          {/* GITHUB */}
           <a
             href="https://github.com/fvcified"
             target="_blank"
@@ -129,7 +127,6 @@ export default function Footer() {
           >
             <Image src="/images/spotify.svg" alt="Spotify" width={32} height={32} />
           </a>
-
           <a
             href="https://gitlab.com/fvcified"
             target="_blank"
@@ -139,10 +136,8 @@ export default function Footer() {
           >
             <Image src="/images/gitlab.svg" alt="GitLab" width={32} height={32} />
           </a>
-
         </div>
       </div>
-
       <div className="footer-copyright">
         2025@<a href="https://fvkid.xyz/" target="_blank" rel="noopener noreferrer" className="copyright-link">
           <span className="underline-text">{'{fvkid.site}'}</span>

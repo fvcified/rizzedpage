@@ -110,7 +110,6 @@ export default function VolumeControl() {
           </g>
         </svg>
       </button>
-
       <input type="range" className="volume-slider force-hide" id="volume-slider" ref={sliderRef}
         min="0" max="100" defaultValue="100" step="1" aria-label="Volume Control"
         onInput={() => {
@@ -120,7 +119,6 @@ export default function VolumeControl() {
           displayRef.current?.classList.remove('force-hide');
         }}
       />
-
       <div className="volume-display force-hide" ref={displayRef}>
         <span className={`volume-label${editing ? ' editing' : ''}`} id="volume-label" ref={labelRef}
           onClick={(e) => {

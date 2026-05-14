@@ -27,8 +27,47 @@ interface SpotifyData {
   track_id: string;
   song: string;
   artist: string;
+  album: string;
   album_art_url: string;
   timestamps: { start: number; end: number };
+}
+
+const VSCODE_IDS = ['383226320970055681', '1070165475000545280'];
+//const GAME_LIKE_IDS: string[] = [];
+
+function getActivityTooltip(activity: Activity): { title: string; sub?: string } {
+  const id = activity.application_id ?? '';
+  const isVSCode =
+    VSCODE_IDS.includes(id) ||
+    /visual studio code/i.test(activity.name) ||
+    activity.name === 'Code';
+
+  if (isVSCode) {
+    const details = activity.details ?? '';
+    const state = activity.state ?? '';
+
+    const editingMatch = details.match(/^[Ee]diting\s+(.+\.\w+)/);
+    if (editingMatch) {
+      const filename = editingMatch[1];
+      const ext = (filename.match(/\.(\w+)$/) ?? [])[1]?.toUpperCase() ?? '';
+      return { title: ext ? `Editing a ${ext} file` : 'Editing a file', sub: filename };
+    }
+
+    const workingMatch = state.match(/^[Ww]orking on\s+(.+\.\w+?)(?::\d+)*$/);
+    if (workingMatch) {
+      const filename = workingMatch[1];
+      const ext = (filename.match(/\.(\w+)$/) ?? [])[1]?.toUpperCase() ?? '';
+      return { title: ext ? `Editing a ${ext} file` : 'Editing a file', sub: filename };
+    }
+
+    if (/^[Ii]dling$/i.test(details) || /^[Ii]dling$/i.test(state)) {
+      return { title: 'Idling in VS Code' };
+    }
+
+    return { title: 'In VS Code' };
+  }
+
+  return { title: activity.name };
 }
 
 function fmTime(ms: number) {
@@ -260,26 +299,20 @@ export default function DiscordPanel() {
 
   function updProgress(ts: { start: number; end: number }) {
     cancelAnimationFrame(animFrameRef.current);
-
     const tick = () => {
       const now = Date.now();
       const dur = ts.end - ts.start;
-
       if (now >= ts.end) {
         if (progressBarRef.current) progressBarRef.current.style.width = '100%';
         if (timeDisplayRef.current) timeDisplayRef.current.textContent = `${fmTime(dur)} / ${fmTime(dur)}`;
         return;
       }
-
       const elapsedMs = now - ts.start;
       const pct = Math.min((elapsedMs / dur) * 100, 100);
-
       if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`;
       if (timeDisplayRef.current) timeDisplayRef.current.textContent = `${fmTime(elapsedMs)} / ${fmTime(dur)}`;
-
       animFrameRef.current = requestAnimationFrame(tick);
     };
-
     animFrameRef.current = requestAnimationFrame(tick);
   }
 
@@ -401,6 +434,15 @@ export default function DiscordPanel() {
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   )}
+                  {(() => {
+                    const { title, sub } = getActivityTooltip(activity);
+                    return (
+                      <div className="media-tooltip">
+                        <span className="media-tooltip-title">{sanitizeText(title)}</span>
+                        {sub && <span className="media-tooltip-sub">{sanitizeText(sub)}</span>}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="activity-info" style={{ display: 'flex' }}>
                   <span className="activity-label">Playing</span>
@@ -451,14 +493,20 @@ export default function DiscordPanel() {
               </div>
             ) : (
               <>
-                <img
-                  id="album-art"
-                  src={spotify.album_art_url}
-                  alt="Album Art"
-                  loading="lazy"
-                  draggable={false}
-                  style={{ display: 'block' }}
-                />
+                <div className="album-art-wrapper">
+                  <img
+                    id="album-art"
+                    src={spotify.album_art_url}
+                    alt="Album Art"
+                    loading="lazy"
+                    draggable={false}
+                    style={{ display: 'block' }}
+                  />
+                  <div className="media-tooltip">
+                    <span className="media-tooltip-title">{sanitizeText(spotify.album)}</span>
+                    <span className="media-tooltip-sub">{sanitizeText(spotify.artist)}</span>
+                  </div>
+                </div>
                 <div className="song-info" style={{ display: 'flex' }}>
                   <div id="song-name">{sanitizeText(spotify.song)}</div>
                   <div id="artist-name">{sanitizeText(spotify.artist)}</div>
@@ -472,7 +520,6 @@ export default function DiscordPanel() {
               </>
             )}
           </div>
-
         </div>
       </div>
     </>

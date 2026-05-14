@@ -63,7 +63,7 @@ img {
 .glass-container > *,
 .about-container > *,
 .about-bg > * {
-    pointer-events: auto;
+  pointer-events: auto;
 }
 
 .volume-btn {
@@ -145,13 +145,8 @@ img {
   pointer-events: none;
 }
 
-#mute-icon {
-  opacity: 0;
-}
-
-#unmute-icon {
-  opacity: 1;
-}
+#mute-icon { opacity: 0; }
+#unmute-icon { opacity: 1; }
 
 .volume-slider {
   -webkit-appearance: none;
@@ -333,7 +328,7 @@ img {
   font-family: 'JetBrains Mono', monospace;
   display: none;
   flex-direction: column;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 1);
   backdrop-filter: blur(20px);
   opacity: 0;
   transform: translateY(20px) scale(0.95);
@@ -1039,6 +1034,7 @@ body.noscroll {
   display: inline-flex;
   background: rgb(19, 19, 19);
   border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
   color: rgb(255, 255, 255);
   font-size: 0.80rem;
   opacity: 0;
@@ -1134,8 +1130,14 @@ body.noscroll {
   align-items: stretch;
   width: 650px;
   gap: 0;
+  overflow: visible;
   position: relative;
   pointer-events: auto;
+}
+
+.widget-stack-container,
+.widget-stack {
+  overflow: visible !important;
 }
 
 #activity-name,
@@ -1149,7 +1151,99 @@ body.noscroll {
 #off-status,
 .reconnecting-text,
 .activity-label {
-  cursor: text;
+  cursor: text !important;
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: none !important;
+}
+
+.album-art-wrapper,
+.activity-icon-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible !important;
+  isolation: auto;
+  z-index: 10;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.album-art-wrapper img,
+.activity-icon-wrapper img,
+.activity-icon-wrapper .activity-icon-fallback {
+  cursor: pointer;
+}
+
+
+#activity-widget .activity-icon-wrapper,
+#spotify-widget .album-art-wrapper {
+  z-index: 20 !important;
+}
+
+#spotify-widget .album-art-wrapper:hover {
+  overflow: visible !important;
+  z-index: 9999;
+}
+
+#activity-widget .activity-info {
+  z-index: 3;
+}
+
+#activity-widget.visible {
+  overflow: visible !important;
+}
+
+#activity-widget .activity-icon-wrapper .media-tooltip {
+  z-index: 9999 !important;
+}
+
+#activity-widget.visible,
+#spotify-widget:not(.hidden) {
+  overflow: visible !important;
+}
+
+#spotify-widget.active {
+  border-color: #1db954 !important;
+  pointer-events: auto;
+}
+
+.media-tooltip {
+  font-family: 'Outfit', sans-serif;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 9px 15px;
+  border-radius: 13px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  gap: 4px;
+  background: rgb(19, 19, 19);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.media-tooltip-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgb(255, 255, 255);
+}
+
+.media-tooltip-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.album-art-wrapper:hover .media-tooltip,
+.activity-icon-wrapper:hover .media-tooltip {
+  opacity: 1;
 }
 
 
@@ -1160,7 +1254,6 @@ body.noscroll {
   position: relative;
   width: 100%;
   height: auto;
-  min-height: 90px;
   border-radius: 20px 20px 0 0;
   box-sizing: border-box;
   padding: 20px 34px;
@@ -1190,6 +1283,7 @@ body.noscroll {
   padding-top: 0;
   padding-bottom: 0;
   pointer-events: none;
+  z-index: 4;
 }
 
 #activity-widget.visible {
@@ -1224,8 +1318,6 @@ body.noscroll {
 
 .activity-icon-wrapper {
   display: none;
-  position: relative;
-  flex-shrink: 0;
 }
 
 #activity-icon {
@@ -1388,11 +1480,11 @@ body.noscroll {
   max-height: 0;
 }
 
-#spotify-widget.active { border-color: #1db954 !important; }
 #spotify-widget.inactive {
   border-color: #747f8d !important;
   justify-content: center !important;
 }
+
 #spotify-widget.reconnecting { border-color: #faa61a !important; }
 
 #spotify-widget > * {
@@ -1416,10 +1508,10 @@ body.noscroll {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: flex-start; 
+  align-items: flex-start;
   flex: 1;
   overflow: hidden;
-  width: fit-content;  
+  width: fit-content;
 }
 
 #spotify-widget #song-name {
@@ -1603,6 +1695,8 @@ body.noscroll {
     overflow: hidden;
     border-radius: 20px;
   }
+
+  #spotify-widget.active { overflow: visible !important; }
   #spotify-widget.has-activity { border-radius: 0 0 20px 20px; }
   #spotify-widget #album-art {
     width: 59px;
@@ -1610,11 +1704,13 @@ body.noscroll {
     flex-shrink: 0;
     margin-right: 0;
   }
+
   #spotify-widget .song-info {
     flex: 1;
     min-width: 0;
     overflow: hidden;
   }
+
   #spotify-widget #song-name,
   #spotify-widget #artist-name {
     white-space: nowrap;
@@ -1623,6 +1719,7 @@ body.noscroll {
     width: fit-content;
     max-width: 100%;
   }
+
   #spotify-widget #song-name { font-size: 1rem; }
   #spotify-widget #artist-name { font-size: 0.85rem; }
   #spotify-widget .progress-container { margin-top: 4px; }
@@ -1637,7 +1734,8 @@ body.noscroll {
     max-width: 100%;
     padding: 0;
   }
-  #spotify-logo { display: none !important; width: 32px; height: 32px; }
+
+  #spotify-logo { display: none !important; }
   #activity-widget .off-status-text { font-size: 1.1rem !important; }
   #spotify-widget.reconnecting {
     flex-direction: column;
@@ -1647,12 +1745,14 @@ body.noscroll {
     min-height: 100px;
     padding: 1.25rem 1rem;
   }
+
   .reconnecting-text {
     font-size: 0.8rem;
     white-space: normal;
     text-align: center;
     max-width: 100%;
   }
+
   #activity-widget.activity-inactive .off-status-text {
     font-size: 1.1rem;
     white-space: normal;
@@ -2008,9 +2108,7 @@ body.noscroll {
     gap: 0.8em;
   }
   .footer-icons { gap: 2em; }
-  .footer-icon {
-    transform: translateY(15px);
-  }
+  .footer-icon { transform: translateY(15px); }
   .footer-copyright {
     position: absolute;
     bottom: 1rem;
@@ -2054,21 +2152,4 @@ body.noscroll {
 * {
   scrollbar-width: thin;
   scrollbar-color: #262626 #000000;
-}
-
-#song-name,
-#artist-name,
-#time-display,
-#off-status,
-#activity-name,
-#activity-details,
-#activity-state,
-#activity-elapsed,
-#activity-off-status,
-.activity-label,
-.reconnecting-text {
-  cursor: text !important;
-  pointer-events: auto !important;
-  user-select: text !important;
-  -webkit-user-select: none !important;
 }

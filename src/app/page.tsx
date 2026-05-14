@@ -23,7 +23,6 @@ export default function Home() {
       <nav className="navbar">
         <Navbar />
       </nav>
-
       <main>
         <section id="home">
           <div className="main-content">
@@ -34,7 +33,6 @@ export default function Home() {
             <DiscordPanel />
           </div>
         </section>
-
         <div className="about-space"></div>
         <div className="page-wrapper">
           <AboutSection />
@@ -42,7 +40,6 @@ export default function Home() {
           <Footer />
         </div>
       </main>
-
       <Marquee />
     </>
   );

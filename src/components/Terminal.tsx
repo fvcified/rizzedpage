@@ -306,7 +306,6 @@ export default function Terminal() {
           <line x1="12" y1="19" x2="20" y2="19"></line>
         </svg>
       </button>
-
       <div
         className={`terminal-container${isOpen ? ' visible' : ''}${isClosing ? ' closing' : ''}`}
         id="terminal-container"
@@ -326,13 +325,11 @@ export default function Terminal() {
             </svg>
           </button>
         </div>
-
         <div className="terminal-output" id="terminal-output" ref={outputRef}>
           {lines.map((l, i) => (
             <div key={i} className={`terminal-line${l.type ? ' ' + l.type : ''}`} dangerouslySetInnerHTML={{ __html: l.html }} />
           ))}
         </div>
-
         <div className="terminal-input-row">
           <span className="terminal-prompt">fvkid@site:~#</span>
           <input
@@ -355,7 +352,6 @@ export default function Terminal() {
             }}
           />
         </div>
-
         <input
           type="file"
           ref={fileInputRef}
