@@ -965,8 +965,6 @@ body.noscroll {
   bottom: 5px;
   right: 5px;
   z-index: 3;
-  outline: 5px solid rgb(0 0 0);
-  background: rgb(0 0 0);
 }
 
 .username-badge-wrapper {

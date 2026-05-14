@@ -528,6 +528,7 @@ function getSmallIconTooltip(activity: Activity): string | null {
                     />
                     <div className="media-tooltip">
                       <span className="media-tooltip-title">{sanitizeText(spotify.album)}</span>
+                      <span className="media-tooltip-sub">{sanitizeText(spotify.artist)}</span>
                     </div>
                   </div>
                   <div className="song-info" style={{ display: 'flex' }}>
