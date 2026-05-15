@@ -1571,11 +1571,7 @@ body.noscroll {
 
 .widget-divider.visible { opacity: 1; }
 
-@media (max-width: 768px) {
-  .activity-label {
-    margin-bottom: 3px;
-  }
-  
+@media (max-width: 768px) { 
   #activity-widget.visible {
     min-height: 100px;
     padding-top: 12px;
