@@ -266,7 +266,7 @@ img {
 
 .volume-input {
   display: none;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', Satoshi, sans-serif;
   width: 50px;
   height: 28px;
   background: rgba(255, 255, 255, 0.1);
@@ -325,7 +325,7 @@ img {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   z-index: 500;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', Satoshi, sans-serif;
   display: none;
   flex-direction: column;
   box-shadow: 0 0 4px rgba(0, 0, 0, 1);
@@ -470,7 +470,7 @@ img {
   border: none;
   outline: none;
   color: rgb(255, 255, 255);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', Satoshi, sans-serif;
   font-size: 0.78rem;
   caret-color: rgb(255, 255, 255);
 }
@@ -586,7 +586,7 @@ body.noscroll {
   letter-spacing: 0.04em;
   text-shadow: 1px 0px 3px #ffffff;
   user-select: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', Satoshi, sans-serif;
   position: relative;
   z-index: 3;
   cursor: text;
@@ -698,7 +698,7 @@ body.noscroll {
 
 .tech-marquee-row span {
   margin-right: 2rem;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Space Grotesk', Satoshi, sans-serif;
   font-size: 1.3rem;
   font-weight: 600;
   color: #262626;
@@ -793,7 +793,7 @@ body.noscroll {
 .navbar-link {
   background: none;
   border: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', Satoshi, sans-serif;
   font-size: 1.3rem;
   color: rgba(255, 255, 255, 0.4);
   text-decoration: none;
@@ -992,7 +992,7 @@ body.noscroll {
 }
 
 .username-tooltip {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Satoshi', Satoshi, sans-serif;
   position: absolute;
   bottom: calc(100% + 4px);
   left: 50%;
@@ -1074,12 +1074,10 @@ body.noscroll {
 
 .badge-icons .textBubble,
 .badge-icons #textBubble {
-  font-family: 'Outfit', sans-serif;
-  font-weight: bold;
+  font-weight: 600;
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%);
   padding: 9px 15px;
   border-radius: 13px;
   display: inline-flex;
@@ -1095,6 +1093,14 @@ body.noscroll {
   z-index: 3;
   text-align: center;
   white-space: nowrap;
+}
+
+.badge-icons .textBubble { 
+  font-family: 'Satoshi', Outfit, sans-serif; 
+}
+
+.badge-icons #textBubble { 
+  font-family: 'Outfit', Satoshi, sans-serif; 
 }
 
 .badge-icons:hover .textBubble,
@@ -1304,7 +1310,7 @@ body.noscroll {
 }
 
 .media-tooltip {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Satoshi', Outfit, sans-serif;
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
@@ -1986,7 +1992,7 @@ body.noscroll {
 .about-bg:hover { border-color: rgba(255, 255, 255, 0.1); }
 
 .about-title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', Satoshi, sans-serif;
   font-size: clamp(1.75rem, 5vw, 2.5rem);
   color: rgba(255, 255, 255, 1);
   font-weight: 700;
@@ -1996,7 +2002,7 @@ body.noscroll {
 }
 
 .about-secondary-title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', Satoshi, sans-serif;
   font-size: clamp(1.5rem, 4vw, 2rem);
   color: rgba(255, 255, 255, 0.6);
   font-weight: 700;
@@ -2006,7 +2012,7 @@ body.noscroll {
 }
 
 .about-subtitle {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', Satoshi, sans-serif;
   font-size: clamp(0.95rem, 3vw, 1.1rem);
   color: rgba(255, 255, 255, 1);
   margin-bottom: 1.25rem;
@@ -2094,7 +2100,7 @@ body.noscroll {
 }
 
 .footer-title {
-  font-family: Inter, sans-serif;
+  font-family: 'Satoshi', Outfit, sans-serif;
   font-size: 1.2rem;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.4);
@@ -2153,7 +2159,7 @@ body.noscroll {
   padding: 0.5rem 1rem;
   transform: translateY(-50%);
   align-items: center;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', Satoshi, sans-serif;
   font-size: 0.90rem;
   color: rgba(255, 255, 255, 1);
   z-index: 500;
@@ -2204,7 +2210,7 @@ body.noscroll {
   border: 1px solid rgba(255, 255, 255, 0.13);
   padding: 0.3rem 0.6rem;
   border-radius: 13px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', Satoshi, sans-serif;
   font-size: 0.8rem;
   white-space: nowrap;
   opacity: 0;
