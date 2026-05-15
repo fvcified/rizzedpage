@@ -980,6 +980,7 @@ body.noscroll {
 }
 
 .discord-username {
+  font-family: 'Outfit', 'Satoshi', sans-serif;
   font-size: 2.3rem;
   font-weight: 700;
   color: rgb(255, 255, 255);
@@ -1195,6 +1196,8 @@ body.noscroll {
 
 .widget-stack-container {
   display: flex;
+  font-family: 'Satoshi', 'Inter', sans-serif; 
+  font-weight: 500;
   width: 100vw;
   justify-content: center;
   margin-top: -190px;
@@ -2100,7 +2103,7 @@ body.noscroll {
 }
 
 .footer-title {
-  font-family: 'Satoshi', 'Outfit', sans-serif;
+  font-family: 'Outfit', 'Satoshi', sans-serif;
   font-size: 1.2rem;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.4);
