@@ -1007,7 +1007,7 @@ body.noscroll {
   gap: 8px;
   background: rgb(19, 19, 19);
   border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 1);
   z-index: 100;
   white-space: nowrap;
   pointer-events: none;
@@ -1084,7 +1084,7 @@ body.noscroll {
   display: inline-flex;
   background: rgb(19, 19, 19);
   border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 1);
   color: rgb(255, 255, 255);
   font-size: 0.80rem;
   opacity: 0;
@@ -1327,7 +1327,7 @@ body.noscroll {
   gap: 4px;
   background: rgb(19, 19, 19);
   border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 1);
   z-index: 9999;
   white-space: nowrap;
   pointer-events: none;
