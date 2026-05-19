@@ -1365,7 +1365,7 @@ body.noscroll {
   display: inline-flex;
   flex-direction: column;     
   align-items: flex-start;    
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
   width: 100%;
   height: auto;
@@ -1402,8 +1402,8 @@ body.noscroll {
   max-height: 200px;
   min-height: 110px;
   opacity: 1;
-  padding-top: 13px;
-  padding-bottom: 20px;
+  padding-top: 16px;
+  padding-bottom: 16px;
   pointer-events: auto;
 }
 
@@ -1512,7 +1512,7 @@ body.noscroll {
   color: rgba(255, 255, 255, 0.5);
   text-transform: none;
   letter-spacing: 0.04em;
-  margin-bottom: 0;
+  margin-bottom: 8px;
 }
 
 .activity-content-row {
@@ -1574,8 +1574,8 @@ body.noscroll {
 @media (max-width: 768px) { 
   #activity-widget.visible {
     min-height: 100px;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 }
 
