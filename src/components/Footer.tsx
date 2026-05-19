@@ -140,7 +140,7 @@ export default function Footer() {
       </div>
       <div className="footer-copyright">
         2025@<a href="https://fvkid.xyz/" target="_blank" rel="noopener noreferrer" className="copyright-link">
-          <span className="underline-text">{'{fvkid.site}'}</span>
+          <span className="underline-text">{'{ fvkid }'}</span>
           <span className="tooltip-bubble">site owned by Nyc Xiao</span>
         </a>
       </div>
