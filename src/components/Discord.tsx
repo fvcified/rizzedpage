@@ -9,18 +9,81 @@ interface DiscordUser {
   id: string;
   username: string;
   display_name?: string;
+  global_name?: string;
+  discriminator?: string;
   avatar?: string;
-  avatar_decoration_data?: { asset: string };
+  avatar_decoration_data?: {
+    asset: string;
+    sku_id?: string;
+  };
+  public_flags?: number;
+  bot?: boolean;
+  clan?: {
+    identity_guild_id: string;
+    identity_enabled: boolean;
+    tag: string;
+    badge: string;
+  };
+}
+
+interface ActivityButton {
+  label: string;
+  url: string;
+}
+
+interface ActivityParty {
+  id?: string;
+  size?: [number, number];
+}
+
+interface ActivitySecrets {
+  join?: string;
+  spectate?: string;
+  match?: string;
+}
+
+interface ActivityEmoji {
+  name: string;
+  id?: string;
+  animated?: boolean;
+}
+
+interface ActivityAssets {
+  large_image?: string;
+  large_text?: string;
+  small_image?: string;
+  small_text?: string;
+}
+
+interface ActivityTimestamps {
+  start?: number;
+  end?: number;
 }
 
 interface Activity {
   type: number;
   name: string;
+  id?: string;
   application_id?: string;
+  created_at?: number;
+
   details?: string;
   state?: string;
-  timestamps?: { start?: number; end?: number };
-  assets?: { large_image?: string; small_image?: string };
+  url?: string; 
+
+  assets?: ActivityAssets;
+  timestamps?: ActivityTimestamps;
+  party?: ActivityParty;
+  secrets?: ActivitySecrets;
+  buttons?: ActivityButton[];
+
+  emoji?: ActivityEmoji;
+
+  flags?: number;
+
+  instance?: boolean;
+  sync_id?: string;
+  session_id?: string;
 }
 
 interface SpotifyData {
@@ -32,7 +95,30 @@ interface SpotifyData {
   timestamps: { start: number; end: number };
 }
 
+interface LanyardData {
+  discord_user: DiscordUser;
+  discord_status: 'online' | 'idle' | 'dnd' | 'offline' | 'invisible';
+  active_on_discord_desktop?: boolean;
+  active_on_discord_mobile?: boolean;
+  active_on_discord_web?: boolean;
+  listening_to_spotify: boolean;
+  spotify: SpotifyData | null;
+  activities: Activity[];
+  kv?: Record<string, string>;
+}
+
 const VSCODE_IDS = ['383226320970055681', '1070165475000545280'];
+const ACTIVITY_TYPE_LABELS: Record<number, string> = {
+  0: 'Playing',
+  1: 'Streaming',
+  2: 'Listening to',
+  3: 'Watching',
+  5: 'Competing in',
+};
+
+function getActivityTypeLabel(type: number): string {
+  return ACTIVITY_TYPE_LABELS[type] ?? 'Playing';
+}
 
 function getActivityTooltip(activity: Activity): { title: string; sub?: string } {
   const id = activity.application_id ?? '';
@@ -60,7 +146,9 @@ function getActivityTooltip(activity: Activity): { title: string; sub?: string }
     }
   }
 
-  return { title: activity.name, sub: activity.details };
+  const tooltipTitle = activity.assets?.large_text || activity.name;
+  const tooltipSub = activity.details;
+  return { title: tooltipTitle, sub: tooltipSub };
 }
 
 function getSmallIconTooltip(activity: Activity): string | null {
@@ -70,7 +158,9 @@ function getSmallIconTooltip(activity: Activity): string | null {
     /visual studio code/i.test(activity.name) ||
     activity.name === 'Code';
 
-  if (!isVSCode) return null;
+  if (!isVSCode) {
+    return activity.assets?.small_text ?? null;
+  }
 
   const details = activity.details ?? '';
   const state = activity.state ?? '';
@@ -107,7 +197,9 @@ function isValidSpotifyUrl(url: string) {
     if (u.protocol !== 'https:') return false;
     const allowed = ['i.scdn.co', 'scdn.co', 'googleusercontent.com', 'spotifycdn.com', 'spotify.com'];
     return allowed.some(d => u.hostname.includes(d));
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 const appIconCache: Record<string, string | null> = {};
@@ -121,12 +213,28 @@ async function getAppIcon(appId: string): Promise<string | null> {
     const url = data.icon ? `https://cdn.discordapp.com/app-icons/${appId}/${data.icon}.png` : null;
     appIconCache[appId] = url;
     return url;
-  } catch { appIconCache[appId] = null; return null; }
+  } catch {
+    appIconCache[appId] = null;
+    return null;
+  }
+}
+
+function resolveAssetUrl(image: string, applicationId?: string): string {
+  if (image.startsWith('mp:external/')) {
+    return `https://media.discordapp.net/${image.replace('mp:', '')}`;
+  }
+  if (image.startsWith('https://')) {
+    return image;
+  }
+  if (applicationId) {
+    return `https://cdn.discordapp.com/app-assets/${applicationId}/${image}.png`;
+  }
+  return '';
 }
 
 export default function DiscordPresence() {
   const [user, setUser] = useState<DiscordUser | null>(null);
-  const [status, setStatus] = useState('offline');
+  const [status, setStatus] = useState<LanyardData['discord_status']>('offline');
   const [activity, setActivity] = useState<Activity | null>(null);
   const [activityIcon, setActivityIcon] = useState('');
   const [activitySmallIcon, setActivitySmallIcon] = useState('');
@@ -154,16 +262,14 @@ export default function DiscordPresence() {
     try {
       const res = await fetch('/api/userAPI');
       if (!res.ok) throw new Error('failed');
-      const data = await res.json();
-      const u = data.data.discord_user;
-      const s = data.data.discord_status;
-      const activities = data.data.activities;
-      setUser(u);
-      setStatus(s);
-      userIdRef.current = u.id;
-      renderActivity(activities);
+      const json = await res.json();
+      const data: LanyardData = json.data;
+      setUser(data.discord_user);
+      setStatus(data.discord_status);
+      userIdRef.current = data.discord_user.id;
+      renderActivity(data.activities);
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-        loadSpotify(u.id);
+        loadSpotify(data.discord_user.id);
       }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -176,43 +282,62 @@ export default function DiscordPresence() {
   }, [fetchProfile]);
 
   async function renderActivity(activities: Activity[]) {
-    const act = activities?.find(a => a.type === 0 && a.application_id) || null;
+    const act =
+      activities?.find(a => a.type === 0 && a.application_id) ||
+      activities?.find(a => a.type === 0) ||
+      null;
+
     setActivity(act);
     if (elapsedRef.current) clearInterval(elapsedRef.current);
-    if (!act) { setElapsed(''); return; }
+    if (!act) {
+      setElapsed('');
+      setActivityIcon('');
+      setActivitySmallIcon('');
+      setActivityFallback(false);
+      return;
+    }
 
     if (act.assets?.large_image) {
-      const li = act.assets.large_image;
-      const url = li.startsWith('mp:external/')
-        ? `https://media.discordapp.net/${li.replace('mp:', '')}`
-        : `https://cdn.discordapp.com/app-assets/${act.application_id}/${li}.png`;
+      const url = resolveAssetUrl(act.assets.large_image, act.application_id);
       setActivityIcon(url);
       setActivityFallback(false);
     } else if (act.application_id) {
       const icon = await getAppIcon(act.application_id);
-      if (icon) { setActivityIcon(icon); setActivityFallback(false); }
-      else { setActivityIcon(''); setActivityFallback(true); }
+      if (icon) {
+        setActivityIcon(icon);
+        setActivityFallback(false);
+      } else {
+        setActivityIcon('');
+        setActivityFallback(true);
+      }
+    } else {
+      setActivityIcon('');
+      setActivityFallback(true);
     }
 
-    if (act.assets?.small_image && act.application_id) {
-      const si = act.assets.small_image;
-      const url = si.startsWith('mp:external/')
-        ? `https://media.discordapp.net/${si.replace('mp:', '')}`
-        : `https://cdn.discordapp.com/app-assets/${act.application_id}/${si}.png`;
+    if (act.assets?.small_image) {
+      const url = resolveAssetUrl(act.assets.small_image, act.application_id);
       setActivitySmallIcon(url);
-    } else { setActivitySmallIcon(''); }
+    } else {
+      setActivitySmallIcon('');
+    }
 
     if (act.timestamps?.start) {
       const tick = () => setElapsed(fmElapsed(Date.now() - act.timestamps!.start!));
       tick();
       elapsedRef.current = setInterval(tick, 1000);
+    } else {
+      setElapsed('');
     }
   }
 
   function loadSpotify(userId: string) {
     if (isConnectingRef.current) return;
     isConnectingRef.current = true;
-    if (reconnectRef.current) { clearTimeout(reconnectRef.current); reconnectRef.current = null; }
+    if (reconnectRef.current) {
+      clearTimeout(reconnectRef.current);
+      reconnectRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.onclose = null;
       wsRef.current.onerror = null;
@@ -249,7 +374,10 @@ export default function DiscordPresence() {
       ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: userId } }));
     };
 
-    ws.onerror = () => { try { ws.close(); } catch {} };
+    ws.onerror = () => {
+      try { ws.close(); } catch {}
+    };
+
     ws.onclose = () => {
       isConnectingRef.current = false;
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
@@ -260,37 +388,50 @@ export default function DiscordPresence() {
       try {
         const data = JSON.parse(event.data);
         if (!data || typeof data.op === 'undefined') return;
+
         if (data.op === 1) {
-          const interval = (data.d?.heartbeat_interval >= 5000 && data.d?.heartbeat_interval <= 60000)
-            ? data.d.heartbeat_interval : 30000;
+          const interval =
+            data.d?.heartbeat_interval >= 5000 && data.d?.heartbeat_interval <= 60000
+              ? data.d.heartbeat_interval
+              : 30000;
           startHeartbeat(interval);
           return;
         }
+
         const validEvents = ['INIT_STATE', 'PRESENCE_UPDATE'];
         if (!validEvents.includes(data.t)) return;
+
         const sp: SpotifyData | null = data.d?.spotify || null;
 
         if (sp) {
           if (!sp.track_id || !sp.song || !sp.artist || !sp.album_art_url || !sp.timestamps) {
-            setSpotifyState('inactive'); return;
+            setSpotifyState('inactive');
+            return;
           }
-          if (!isValidSpotifyUrl(sp.album_art_url)) { setSpotifyState('inactive'); return; }
+          if (!isValidSpotifyUrl(sp.album_art_url)) {
+            setSpotifyState('inactive');
+            return;
+          }
           const trackChanged = sp.track_id !== lastTrackIdRef.current;
           const timeChanged = sp.timestamps.start !== lastStartRef.current;
           if (!trackChanged && !timeChanged) return;
+
           lastTrackIdRef.current = sp.track_id;
           lastStartRef.current = sp.timestamps.start;
           spotifyTimestampsRef.current = sp.timestamps;
           setSpotify(sp);
           setSpotifyState('active');
+
           if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
           cancelAnimationFrame(animFrameRef.current);
+
           const duration = sp.timestamps.end - sp.timestamps.start;
           fallbackTimerRef.current = setTimeout(() => {
             setSpotifyState('inactive');
             lastTrackIdRef.current = null;
             lastStartRef.current = null;
           }, duration + 3000);
+
           updProgress(sp.timestamps);
         } else {
           if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
@@ -316,13 +457,15 @@ export default function DiscordPresence() {
       const dur = ts.end - ts.start;
       if (now >= ts.end) {
         if (progressBarRef.current) progressBarRef.current.style.width = '100%';
-        if (timeDisplayRef.current) timeDisplayRef.current.textContent = `${fmTime(dur)} / ${fmTime(dur)}`;
+        if (timeDisplayRef.current)
+          timeDisplayRef.current.textContent = `${fmTime(dur)} / ${fmTime(dur)}`;
         return;
       }
       const elapsedMs = now - ts.start;
       const pct = Math.min((elapsedMs / dur) * 100, 100);
       if (progressBarRef.current) progressBarRef.current.style.width = `${pct}%`;
-      if (timeDisplayRef.current) timeDisplayRef.current.textContent = `${fmTime(elapsedMs)} / ${fmTime(dur)}`;
+      if (timeDisplayRef.current)
+        timeDisplayRef.current.textContent = `${fmTime(elapsedMs)} / ${fmTime(dur)}`;
       animFrameRef.current = requestAnimationFrame(tick);
     };
     animFrameRef.current = requestAnimationFrame(tick);
@@ -343,6 +486,7 @@ export default function DiscordPresence() {
   };
 
   const hasActivity = !!activity;
+  const activityLabel = activity ? getActivityTypeLabel(activity.type) : 'Playing';
 
   return (
     <>
@@ -370,13 +514,15 @@ export default function DiscordPresence() {
           </div>
           <div className="username-badge-wrapper">
             <span className="discord-username" id="display-name" data-user-id={user?.id}>
-              {user?.display_name || user?.username || 'Err 404'}
+              {user?.display_name || user?.global_name || user?.username || 'Err 404'}
               <div className="username-tooltip">
                 {user?.username && (
                   <div className="username-tooltip-title">@{user.username}</div>
                 )}
-                {user?.display_name && (
-                  <div className="username-tooltip-sub">{user.display_name}</div>
+                {(user?.display_name || user?.global_name) && (
+                  <div className="username-tooltip-sub">
+                    {user.display_name || user.global_name}
+                  </div>
                 )}
               </div>
             </span>
@@ -421,13 +567,15 @@ export default function DiscordPresence() {
           </div>
         </div>
       </div>
-
       <div className="widget-stack-container">
         <div className="widget-stack">
-          <div id="activity-widget" className={`${hasActivity ? 'activity-active' : 'activity-inactive'} visible`}>
+          <div
+            id="activity-widget"
+            className={`${hasActivity ? 'activity-active' : 'activity-inactive'} visible`}
+          >
             {hasActivity ? (
               <>
-                <span className="activity-label">Playing</span>
+                <span className="activity-label">{activityLabel}</span>
                 <div className="activity-content-row">
                   <div className="activity-icon-wrapper" style={{ display: 'flex' }}>
                     {activityFallback || !activityIcon ? (
@@ -440,7 +588,7 @@ export default function DiscordPresence() {
                       <img
                         id="activity-icon"
                         src={activityIcon}
-                        alt="Activity Icon"
+                        alt={sanitizeText(activity.assets?.large_text) || 'Activity Icon'}
                         loading="lazy"
                         onError={() => setActivityFallback(true)}
                       />
@@ -452,11 +600,13 @@ export default function DiscordPresence() {
                           <img
                             className="activity-small-icon"
                             src={activitySmallIcon}
-                            alt=""
+                            alt={sanitizeText(activity.assets?.small_text) || ''}
                             loading="lazy"
                             style={{ display: 'block' }}
                             onError={(e) => {
-                              (e.target as HTMLImageElement).closest<HTMLElement>('.activity-small-icon-wrapper')!.style.display = 'none';
+                              (e.target as HTMLImageElement)
+                                .closest<HTMLElement>('.activity-small-icon-wrapper')!
+                                .style.display = 'none';
                             }}
                           />
                           {smallTooltipText && (
@@ -476,22 +626,33 @@ export default function DiscordPresence() {
                       return (
                         <div className="media-tooltip">
                           <span className="media-tooltip-title">{sanitizeText(title)}</span>
-                          <span className="media-tooltip-sub">{sanitizeText(sub)}</span>
+                          {sub && (
+                            <span className="media-tooltip-sub">{sanitizeText(sub)}</span>
+                          )}
                         </div>
                       );
                     })()}
                   </div>
-
                   <div className="activity-info" style={{ display: 'flex' }}>
                     <div id="activity-name">{sanitizeText(activity.name || 'Unknown')}</div>
                     {activity.details && (
-                      <div id="activity-details" style={{ display: 'block' }}>{sanitizeText(activity.details)}</div>
+                      <div id="activity-details" style={{ display: 'block' }}>
+                        {sanitizeText(activity.details)}
+                      </div>
                     )}
                     {activity.state && (
-                      <div id="activity-state" style={{ display: 'block' }}>{sanitizeText(activity.state)}</div>
+                      <div id="activity-state" style={{ display: 'block' }}>
+                        {/* Party size info kalau ada */}
+                        {activity.party?.size
+                          ? `${sanitizeText(activity.state)} (${activity.party.size[0]}/${activity.party.size[1]})`
+                          : sanitizeText(activity.state)
+                        }
+                      </div>
                     )}
                     {elapsed && (
-                      <div id="activity-elapsed" style={{ display: 'block' }}>{elapsed}</div>
+                      <div id="activity-elapsed" style={{ display: 'block' }}>
+                        {elapsed}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -512,13 +673,11 @@ export default function DiscordPresence() {
               </div>
             )}
           </div>
-
-          <hr className={`widget-divider${hasActivity || true ? ' visible' : ''}`} id="widget-divider" />
-
+          <hr className="widget-divider visible" id="widget-divider" />
           <div id="spotify-widget" className={`${spotifyState} has-activity`}>
             {spotifyState === 'reconnecting' ? (
               <>
-                <div className="reconnecting-spinner" id="reconnecting-spinner"></div>
+                <div className="reconnecting-spinner" id="reconnecting-spinner" />
                 <div className="reconnecting-text" style={{ display: 'block' }}>
                   Hop in, loading tunes. Please hold and give me a sec...
                 </div>
@@ -533,7 +692,7 @@ export default function DiscordPresence() {
                   <img
                     id="album-art"
                     src={spotify.album_art_url}
-                    alt="Album Art"
+                    alt={sanitizeText(spotify.album) || 'Album Art'}
                     loading="lazy"
                     draggable={false}
                     style={{ display: 'block' }}
@@ -547,7 +706,7 @@ export default function DiscordPresence() {
                   <div id="song-name">{sanitizeText(spotify.song)}</div>
                   <div id="artist-name">{sanitizeText(spotify.artist)}</div>
                   <div className="progress-container">
-                    <div id="progress-bar" ref={progressBarRef} style={{ width: '0%' }}></div>
+                    <div id="progress-bar" ref={progressBarRef} style={{ width: '0%' }} />
                   </div>
                   <div className="time-wrapper">
                     <span id="time-display" ref={timeDisplayRef}>-:-- / -:--</span>
