@@ -1447,8 +1447,6 @@ body.noscroll {
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  background: #1e1e1e;
-  outline: 2px solid rgba(0, 0, 0, 0.5);
 }
 
 .activity-small-icon-wrapper .media-tooltip--small {
