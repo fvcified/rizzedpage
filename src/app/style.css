@@ -1405,6 +1405,7 @@ body.noscroll {
   padding-top: 16px;
   padding-bottom: 16px;
   pointer-events: auto;
+  justify-content: center;
 }
 
 #activity-widget.activity-active { border-color: rgb(181, 186, 193); }
@@ -1447,6 +1448,8 @@ body.noscroll {
   border-radius: 50%;
   object-fit: cover;
   display: block;
+  background: rgb(19, 19, 19);     
+  outline: 2px solid rgba(0, 0, 0, 0.6);
 }
 
 .activity-small-icon-wrapper .media-tooltip--small {
@@ -1510,7 +1513,7 @@ body.noscroll {
   color: rgba(255, 255, 255, 0.5);
   text-transform: none;
   letter-spacing: 0.04em;
-  margin-bottom: 8px;
+  margin-bottom: 6.5px;
 }
 
 .activity-content-row {
