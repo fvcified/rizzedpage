@@ -44,6 +44,11 @@ export default function VolumeControl() {
     }
   }
 
+  function showControls() {
+    sliderRef.current?.classList.remove('force-hide');
+    displayRef.current?.classList.remove('force-hide');
+  }
+
   function hideControls() {
     sliderRef.current?.classList.add('force-hide');
     displayRef.current?.classList.add('force-hide');
@@ -54,6 +59,13 @@ export default function VolumeControl() {
     if (inputRef.current) updateVolume(Number(inputRef.current.value));
     setEditing(false);
     inputRef.current?.blur();
+  }
+
+  function handleContainerLeave(e: React.MouseEvent<HTMLDivElement>) {
+    const related = e.relatedTarget as Node | null;
+    if (containerRef.current?.contains(related)) return;
+    stopEditing();
+    hideControls();
   }
 
   useEffect(() => {
@@ -70,19 +82,18 @@ export default function VolumeControl() {
   }, []);
 
   return (
-    <div className="volume-container" id="volume-container" ref={containerRef}
-      onMouseEnter={() => {
-        sliderRef.current?.classList.remove('force-hide');
-        displayRef.current?.classList.remove('force-hide');
-      }}
-      onMouseLeave={() => {
-        stopEditing();
-        hideControls();
-      }}
+    <div
+      className="volume-container"
+      id="volume-container"
+      ref={containerRef}
+      onMouseLeave={handleContainerLeave}
     >
       <audio id="site-audio" src="/audio/godlike.mp3" preload="auto" loop />
-
-      <button className="volume-btn" id="volume-btn" aria-label="Toggle mute"
+      <button
+        className="volume-btn"
+        id="volume-btn"
+        aria-label="Toggle mute"
+        onMouseEnter={showControls}
         onClick={() => {
           stopEditing();
           if (isMuted) {
@@ -93,15 +104,32 @@ export default function VolumeControl() {
             updateVolume(0, false);
             setIsMuted(true);
           }
-        }}>
-        <svg id="unmute-icon" className="volume-icon" style={{ opacity: isMuted ? 0 : 1 }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24">
+        }}
+      >
+        <svg
+          id="unmute-icon"
+          className="volume-icon"
+          style={{ opacity: isMuted ? 0 : 1 }}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 48 48"
+          width="24"
+          height="24"
+        >
           <g fill="none" stroke="#ffffff" strokeWidth="4">
             <path fill="none" strokeLinejoin="round" d="M24 6v36c-7 0-12.201-9.16-12.201-9.16H6a2 2 0 0 1-2-2V17.01a2 2 0 0 1 2-2h5.799S17 6 24 6Z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M32 15a11.91 11.91 0 0 1 1.684 1.859A12.07 12.07 0 0 1 36 24c0 2.654-.846 5.107-2.278 7.09A11.936 11.936 0 0 1 32 33" />
             <path strokeLinecap="round" d="M34.236 41.186C40.084 37.696 44 31.305 44 24c0-7.192-3.796-13.496-9.493-17.02" />
           </g>
         </svg>
-        <svg id="mute-icon" className="volume-icon" style={{ opacity: isMuted ? 1 : 0 }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24">
+        <svg
+          id="mute-icon"
+          className="volume-icon"
+          style={{ opacity: isMuted ? 1 : 0 }}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 48 48"
+          width="24"
+          height="24"
+        >
           <g fill="none" stroke="#ffffff" strokeLinejoin="round" strokeWidth="4">
             <g strokeLinecap="round">
               <path d="m40.735 20.286l-8.486 8.485m.001-8.485l8.485 8.485" />
@@ -110,26 +138,43 @@ export default function VolumeControl() {
           </g>
         </svg>
       </button>
-      <input type="range" className="volume-slider force-hide" id="volume-slider" ref={sliderRef}
-        min="0" max="100" defaultValue="100" step="1" aria-label="Volume Control"
+      <input
+        type="range"
+        className="volume-slider force-hide"
+        id="volume-slider"
+        ref={sliderRef}
+        min="0"
+        max="100"
+        defaultValue="100"
+        step="1"
+        aria-label="Volume Control"
         onInput={() => {
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
           updateVolume(Number(sliderRef.current?.value), true);
-          sliderRef.current?.classList.remove('force-hide');
-          displayRef.current?.classList.remove('force-hide');
         }}
       />
       <div className="volume-display force-hide" ref={displayRef}>
-        <span className={`volume-label${editing ? ' editing' : ''}`} id="volume-label" ref={labelRef}
+        <span
+          className={`volume-label${editing ? ' editing' : ''}`}
+          style={{ pointerEvents: editing ? 'none' : 'auto', cursor: 'default' }}
           onClick={(e) => {
             e.stopPropagation();
             setEditing(true);
             inputRef.current?.focus();
             inputRef.current?.select();
           }}
-        >{volume}%</span>
-        <input type="number" className={`volume-input${editing ? ' editing' : ''}`} id="volume-input" ref={inputRef}
-          min="0" max="100" defaultValue="100" aria-label="Volume Control"
+        >
+          {volume}%
+        </span>
+        <input
+          type="number"
+          className={`volume-input${editing ? ' editing' : ''}`}
+          id="volume-input"
+          ref={inputRef}
+          min="0"
+          max="100"
+          defaultValue="100"
+          aria-label="Volume Control"
           style={{ display: editing ? 'block' : 'none' }}
           onInput={() => {
             updateVolume(Number(inputRef.current?.value), true);
