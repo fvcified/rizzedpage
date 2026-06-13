@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'rizzed page',
     description: 'A rizzed kid',
-    url: 'https://fvkid.xyz/',
+    url: 'https://qwertyu.is-a.dev/',
     siteName: 'fvkid.xyz',
     images: [
       {
