@@ -5,7 +5,7 @@ export default function AboutSection() {
         <div className="about-bg">
           <h1 className="about-title">About Me</h1>
           <h2 className="about-secondary-title">! ./a lil stuff</h2>
-          <p className="about-subtitle">Informatics Engineering Student ; Tech &amp; Cybersecurity Enthusiast ; Research ; Developer &amp; Builder</p>
+          <p className="about-subtitle">Informatics Engineering Student ; Developer &amp; Builder ; Tech &amp; Cybersecurity Enthusiast ; Researcher</p>
           <p className="about-description">
             <span className="about-hover">I&apos;m undergrad informatics engineering student<br /></span>
             <span className="about-hover">who loves everything about code, software, and anything technology related stuff.</span><br />
