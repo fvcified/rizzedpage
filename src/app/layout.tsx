@@ -10,11 +10,11 @@ export const metadata: Metadata = {
   description: 'A rizzed kid',
   authors: [{ name: 'Xiao Xli' }],
   keywords: ['fvkid', 'rizzed'],
-  metadataBase: new URL('https://qwertyu.is-a.dev/'),
+  metadataBase: new URL('https://rizzed.is-a.dev/'),
   openGraph: {
     title: 'rizzed page',
     description: 'A rizzed kid',
-    url: 'https://qwertyu.is-a.dev/',
+    url: 'https://rizzed.is-a.dev/',
     siteName: 'fvkid.xyz',
     images: [
       {

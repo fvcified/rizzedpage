@@ -139,7 +139,10 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer-copyright">
-        2025@<a href="https://qwertyu.is-a.dev/" target="_blank" rel="noopener noreferrer" className="copyright-link">
+        mine@<a href="https://rizzed.is-a.dev/" target="_blank" rel="noopener noreferrer" className="copyright-link">
+          <span className="underline-text">{'{ rizzed }'}</span>
+          <span className="tooltip-bubble">site owned by Xiao Xli</span>
+        </a>   ;   <a href="https://qwertyu.is-a.dev/" target="_blank" rel="noopener noreferrer" className="copyright-link">
           <span className="underline-text">{'{ qwertyu }'}</span>
           <span className="tooltip-bubble">site owned by Xiao Xli</span>
         </a>
