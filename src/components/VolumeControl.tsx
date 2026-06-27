@@ -88,7 +88,7 @@ export default function VolumeControl() {
       ref={containerRef}
       onMouseLeave={handleContainerLeave}
     >
-      <audio id="site-audio" src="/audio/godlike.mp3" preload="auto" loop />
+      <audio id="site-audio" src="/audio/biteurtongue.mp3" preload="auto" loop />
       <button
         className="volume-btn"
         id="volume-btn"
