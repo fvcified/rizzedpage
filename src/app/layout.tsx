@@ -6,29 +6,29 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'rizzedpage',
+  title: 'rizzed',
   description: 'A rizzed kid',
   authors: [{ name: 'Xiao Xli' }],
   keywords: ['fvkid', 'rizzed'],
   metadataBase: new URL('https://rizzed.is-a.dev/'),
   openGraph: {
-    title: 'rizzed page',
+    title: 'rizzed',
     description: 'A rizzed kid',
     url: 'https://rizzed.is-a.dev/',
-    siteName: 'fvkid.xyz',
+    siteName: 'rizzed.is-a.dev',
     images: [
       {
         url: '/images/thumbnail.webp',
         width: 1200,
         height: 630,
-        alt: 'rizzed page',
+        alt: 'rizzed',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'rizzed page',
+    title: 'rizzed',
     description: 'A rizzed kid',
     images: ['/images/thumbnail.webp'],
   },
