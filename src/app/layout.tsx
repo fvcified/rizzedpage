@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'rizzed',
   description: 'A rizzed kid',
   authors: [{ name: 'Xiao Xli' }],
-  keywords: ['fvkid', 'rizzed'],
+  keywords: ['ARizzedKid', 'rizzed'],
   metadataBase: new URL('https://rizzed.is-a.dev/'),
   openGraph: {
     title: 'rizzed',

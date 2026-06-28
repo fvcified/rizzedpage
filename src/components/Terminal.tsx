@@ -138,7 +138,7 @@ export default function Terminal() {
       if (inputHash === ADM_HASH) {
         isAdminRef.current = true;
         awaitingAdminRef.current = false;
-        addLine('Admin Session: Authorized. Welcome back, @fvkid', 'success');
+        addLine('Admin Session: Authorized. Welcome back, @ARizzedKid', 'success');
       } else {
         awaitingAdminRef.current = false;
         addLine('⚠️ Incorrect Administrative Key. Session Terminated.', 'muted');
@@ -153,7 +153,7 @@ export default function Terminal() {
     if (rateLimiter.isLimited('terminal-input')) { addLine('⚠️ Too many commands. Please wait.', 'muted'); return; }
 
     if (inputHash === ADM_HASH) {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       addLine('Remote DB: Supabase Connected', 'success');
       addLine('Admin Session: Authorized', 'success');
       return;
@@ -166,7 +166,7 @@ export default function Terminal() {
     }
 
     if (trimmed === './logs') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       addLine('Connecting...', 'dim');
       try {
         const data = await fetchRemoteLogs();
@@ -191,7 +191,7 @@ export default function Terminal() {
     }
 
     if (trimmed === './helpme') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./browse</span> ; browse the file', 'dim');
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./play</span> ; play', 'dim');
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./pause</span> ; pause', 'dim');
@@ -202,7 +202,7 @@ export default function Terminal() {
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./exit</span> ; close the terminal', 'dim');
 
     } else if (trimmed === './browse') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       addLine('Browsing...', 'dim');
 
       let browseTriggered = true;
@@ -233,7 +233,7 @@ export default function Terminal() {
       fileInputRef.current?.click();
 
     } else if (trimmed === './play') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio?.src) {
         audio.play().then(() => addLine(`▶ Playing${loadedFileNameRef.current ? ': ' + escapeHTML(loadedFileNameRef.current) : ''}`, 'success'))
@@ -241,18 +241,18 @@ export default function Terminal() {
       } else { addLine('No audio loaded. Try to ./browse', 'muted'); }
 
     } else if (trimmed === './pause') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       getAudio()?.pause();
       addLine('⏸ Paused', 'bright');
 
     } else if (trimmed === './stop') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio) { audio.pause(); audio.currentTime = 0; }
       addLine('⏹ Stopped', 'bright');
 
     } else if (trimmed === './reset') {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio) {
         audio.src = '/audio/biteurtongue.mp3';
@@ -264,7 +264,7 @@ export default function Terminal() {
 
     } else if (trimmed.startsWith('./volume')) {
       const parts = trimmed.split(' ');
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       if (parts.length === 1) {
         const audio = getAudio();
         addLine(`${Math.round((audio?.volume || 0) * 100)}% (Current)`, 'bright');
@@ -281,7 +281,7 @@ export default function Terminal() {
       closeTerminal();
 
     } else {
-      addLine(`<span class="terminal-prompt">fvkid@site:~# </span>${escapeHTML(trimmed)}`);
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(trimmed)}`);
       addLine(`⚠️ Command not found: <span class="terminal-bright">${escapeHTML(trimmed)}</span><br>I will <span class="terminal-bright">help you</span>, <span class="terminal-bright">just</span> try <span class="terminal-bright">./helpme</span> then`, 'muted');
     }
   }
@@ -317,7 +317,7 @@ export default function Terminal() {
             <span className="dot dot-yellow"></span>
             <span className="dot dot-green"></span>
           </div>
-          <div className="terminal-title">fvkid@siterminal</div>
+          <div className="terminal-title">../../found@me</div>
           <button className="terminal-close" onClick={closeTerminal} aria-label="Close terminal">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -331,7 +331,7 @@ export default function Terminal() {
           ))}
         </div>
         <div className="terminal-input-row">
-          <span className="terminal-prompt">fvkid@site:~#</span>
+          <span className="terminal-prompt">rizzed@cook13:~#</span>
           <input
             type="text"
             className="terminal-input"
