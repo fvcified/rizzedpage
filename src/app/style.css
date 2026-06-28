@@ -598,7 +598,8 @@ body.noscroll {
   bottom: 0;
   display: flex;
   align-items: flex-end;
-  height: auto;
+  height: 75vh;
+  width: auto;
   max-height: 100vw;
   z-index: 2;
   object-fit: contain;
@@ -607,8 +608,8 @@ body.noscroll {
   transition: bottom 0.65s cubic-bezier(.4, 0, .2, 1);
 }
 
-.intro-right { right: 0; }
-.intro-left { left: 0; }
+.intro-right { right: 0; transform: translateX(10%); }
+.intro-left { left: 0; transform: translateX(-10%);  }
 
 .cursor {
   color: #ffffff;
@@ -624,12 +625,8 @@ body.noscroll {
 @media (max-width: 1400px) {
   .intro-right,
   .intro-left {
-    height: 35vw;
-    bottom: 0;
-    object-fit: contain;
-    pointer-events: none;
-    user-select: none;
-    transition: bottom 0.65s cubic-bezier(.4, 0, .2, 1);
+    height: 48vw;
+    width: auto;
   }
 }
 

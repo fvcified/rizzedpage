@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
+
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Image from 'next/image';
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:',.<>?/";
 const SCRAMBLE_PLC = 2;
@@ -145,8 +146,18 @@ export default function Intro() {
 
   return (
     <div className="intro-screen" id="intro-screen" ref={introRef} onClick={handleClick}>
-      <Image src="/images/asciiartt.webp" className="intro-left" alt="character" width={650} height={650} />
-      <Image src="/images/asciiarttt.webp" className="intro-right" alt="character" width={650} height={650} />
+    <img
+      src="/images/asciiartt.webp"
+      className="intro-left"
+      alt="character"
+      draggable={false}
+    />
+    <img
+      src="/images/asciiarttt.webp"
+      className="intro-right"
+      alt="character"
+      draggable={false}
+    />
       <div className="intro-message">
         <span ref={typedRef} id="typedText"></span>
         <span className="cursor">_</span>
