@@ -520,15 +520,20 @@ export default function DiscordPresence() {
           <div className="username-badge-wrapper">
             <span className="discord-username" id="display-name" data-user-id={user?.id}>
               {user?.display_name || user?.global_name || user?.username || 'Err 404'}
+              
               <div className="username-tooltip">
-                {user?.username && (
-                  <div className="username-tooltip-title">@{user.username}</div>
-                )}
                 {(user?.display_name || user?.global_name) && (
-                  <div className="username-tooltip-sub">
+                  <div className="username-tooltip-title">
                     {user.display_name || user.global_name}
                   </div>
                 )}
+                
+                {user?.username && (
+                  <div className="username-tooltip-sub">
+                    @{user.username}
+                  </div>
+                )}
+                
               </div>
             </span>
             <div className="badge-bubble">

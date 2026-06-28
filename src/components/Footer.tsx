@@ -8,7 +8,7 @@ const SCRAMBLE_PLC = 2;
 const SCRAMBLE_SPD = 65;
 
 const txts = [
-  "Hopped", "Greetings outta me", "I'ma Nyc Xiao", "fvn & Ley",
+  "Hopped", "Greetings outta me", "I'm Xiao Xli", "fvn & Ley",
   "#FireW", "#Fvncy", "#TheLifeofRiley", "Ma Will's", "Cheers"
 ];
 
