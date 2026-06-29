@@ -590,6 +590,8 @@ body.noscroll {
   z-index: 3;
   cursor: text;
   pointer-events: auto;
+  word-break: break-word;
+  padding: 0 clamp(1rem, 5vw, 3rem);
 }
 
 .intro-right,
