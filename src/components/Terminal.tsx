@@ -205,7 +205,7 @@ export default function Terminal() {
 
       const inputHash = await sha256(raw.trim());
 
-      const res = await fetch('/api/verifyAdmin', {
+      const res = await fetch('/api/verifyAdm1n', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hash: inputHash }),
