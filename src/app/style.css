@@ -1447,13 +1447,13 @@ body.noscroll {
 }
 
 #activity-off-status {
-  display: flex;
-  width: 38%;
+  display: block;
+  width: 100%;
   text-align: center;
-  justify-content: center;
   font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.39);
   font-style: italic;
+  word-break: break-word;
 }
 
 #activity-widget > * {

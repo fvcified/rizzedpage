@@ -679,17 +679,7 @@ export default function DiscordPresence() {
                 </div>
               </>
             ) : (
-              <div
-                id="activity-off-status"
-                style={{
-                  display: 'flex',
-                  width: '38%',
-                  textAlign: 'center',
-                  justifyContent: 'center',
-                  color: 'rgba(255,255,255,0.39)',
-                  fontStyle: 'italic',
-                }}
-              >
+              <div id="activity-off-status">
                 Currently not doin&apos; anythin&apos;
               </div>
             )}
