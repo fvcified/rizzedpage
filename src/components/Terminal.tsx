@@ -1,10 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://hbhxeaoirncgdxeoavyw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhiaHhlYW9pcm5jZ2R4ZW9hdnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MDAzNzUsImV4cCI6MjA5MTQ3NjM3NX0.tK3vhh7jeRBcFtxz_y-m9sWSg9o0tw2lFh9sJqkHeKg';
-const ADM_HASH = "bace1e04d3bff93d2cc3e776efd375471f669f2086abde3ff26626229462b028";
+interface Line {
+  html?: string;
+  text?: string;
+  type?: string;
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 async function sha256(str: string) {
   const utf8 = new Uint8Array(new TextEncoder().encode(str));
@@ -13,7 +21,12 @@ async function sha256(str: string) {
 }
 
 function escapeHTML(str: string) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
 }
 
 function containsHTML(str: string) {
@@ -21,18 +34,50 @@ function containsHTML(str: string) {
 }
 
 function containsSQLI(str: string) {
-  const p = [/(\bOR\b|\bAND\b).*?=.*?/i,/UNION\s+SELECT/i,/DROP\s+TABLE/i,/INSERT\s+INTO/i,/DELETE\s+FROM/i,/UPDATE\s+\w+\s+SET/i,/--/,/;/,/\/\*/,/\*\//,/xp_/i,/sp_/i];
+  const p = [
+    /UNION\s+SELECT/i,
+    /DROP\s+TABLE/i,
+    /INSERT\s+INTO/i,
+    /DELETE\s+FROM/i,
+    /UPDATE\s+\w+\s+SET/i,
+    /SELECT\s+.*\s+FROM/i,
+    /EXEC(\s|\()/i,
+    /CAST\s*\(/i,
+    /CONVERT\s*\(/i,
+    /\/\*[\s\S]*?\*\//,
+    /xp_\w+/i,
+    /sp_\w+/i,
+    /;\s*(DROP|DELETE|INSERT|UPDATE|CREATE|ALTER)/i,
+  ];
   return p.some(r => r.test(str));
 }
 
-function validateInput(input: string, maxLength = 200) {
+function containsPathTraversal(str: string) {
+  return /(\.\.[\/\\]|%2e%2e[\/\\%]|\.\.%2f|%2e%2e%2f)/i.test(str);
+}
+
+function containsCommandInjection(str: string) {
+  return /(\||&|;|`|\$\(|>\s|<\s|>>|<<|\beval\b|\bexec\b|\bsystem\b|\bpassthru\b|\bshell_exec\b)/i.test(str);
+}
+
+function containsProtoPoison(str: string) {
+  return /(__proto__|constructor\s*\[|prototype\s*\[)/i.test(str);
+}
+
+function validateInput(input: string, maxLength = 100) {
   if (!input || typeof input !== 'string') return '';
-  return input.replace(/\0/g, '').replace(/[\r\n]/g, '').replace(/<[^>]+>/g, '').replace(/[<>]/g, '').substring(0, maxLength).trim();
+  return input
+    .replace(/\0/g, '')
+    .replace(/[\r\n]/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/[<>]/g, '')
+    .substring(0, maxLength)
+    .trim();
 }
 
 const rateLimiter = {
   attempts: {} as Record<string, number[]>,
-  isLimited(key: string, max = 20, windowMs = 10000) {
+  isLimited(key: string, max = 15, windowMs = 10000) {
     const now = Date.now();
     if (!this.attempts[key]) this.attempts[key] = [];
     this.attempts[key] = this.attempts[key].filter(t => now - t < windowMs);
@@ -42,48 +87,60 @@ const rateLimiter = {
   }
 };
 
+const adminBruteGuard = {
+  failures: 0,
+  lockedUntil: 0,
+  isLocked() { return Date.now() < this.lockedUntil; },
+  fail() {
+    this.failures++;
+    if (this.failures >= 3) {
+      this.lockedUntil = Date.now() + 60_000;
+      this.failures = 0;
+    }
+  },
+  reset() { this.failures = 0; this.lockedUntil = 0; }
+};
+
 async function reportIncident(type: string, payload: string) {
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/security_logs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ type, payload, origin: typeof window !== 'undefined' ? window.location.hostname : '' })
+    const safe = payload.substring(0, 500);
+    await supabase.from('security_logs').insert({
+      type,
+      payload: safe,
+      origin: typeof window !== 'undefined' ? window.location.hostname : '',
     });
   } catch {}
 }
 
 async function fetchRemoteLogs(): Promise<Array<{ created_at: string; type: string; payload: string }>> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/security_logs?order=created_at.desc&limit=10`, {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-  });
-  if (!res.ok) throw new Error('failed');
-  return res.json();
+  const res = await fetch('/api/getLogs');
+  if (!res.ok) throw new Error('Failed to fetch');
+  const { data } = await res.json();
+  return data;
 }
 
-async function clearRemoteLogs() {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/security_logs?id=neq.0`, {
-    method: 'DELETE',
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-  });
-  if (!res.ok) throw new Error('failed');
+function runSecurityChecks(raw: string, sanitized: string): string | null {
+  if (!sanitized) return '⚠️ Invalid input detected';
+  if (containsPathTraversal(raw)) return '⚠️ Path traversal attempt blocked';
+  if (containsCommandInjection(raw)) return '⚠️ Command injection attempt blocked';
+  if (containsProtoPoison(raw)) return '⚠️ Prototype pollution attempt blocked';
+  if (containsSQLI(sanitized)) return '⚠️ Dangerous input blocked';
+  if (containsHTML(sanitized)) return '⚠️ HTML content blocked';
+  return null;
 }
-
-type Line = { html: string; type: string };
 
 export default function Terminal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [lines, setLines] = useState<Line[]>([{ html: '<span class="terminal-highlight">./helpme</span> for help you', type: '' }]);
+  const [lines, setLines] = useState<Line[]>([
+    { html: '<span class="terminal-highlight">./helpme</span> for help you', type: '' }
+  ]);
   const [inputVal, setInputVal] = useState('');
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isAdminRef = useRef(false);
+  const isAdminRef = useRef<boolean>(false);
+  const adminHashRef = useRef<string>('');
   const awaitingAdminRef = useRef(false);
   const loadedFileNameRef = useRef<string | null>(null);
 
@@ -130,36 +187,73 @@ export default function Terminal() {
   }
 
   async function handleCmd(raw: string) {
+    if (raw.length > 200) {
+      addLine('⚠️ Input too long', 'muted');
+      await reportIncident('OVERSIZED_INPUT', raw.substring(0, 100));
+      return;
+    }
+
     const sanitized = validateInput(raw, 100);
     const trimmed = sanitized.trim().toLowerCase();
-    const inputHash = await sha256(trimmed);
 
     if (awaitingAdminRef.current) {
-      if (inputHash === ADM_HASH) {
-        isAdminRef.current = true;
+      if (adminBruteGuard.isLocked()) {
         awaitingAdminRef.current = false;
+        addLine('⚠️ Too many failed attempts. Locked for 60s.', 'muted');
+        return;
+      }
+
+      const inputHash = await sha256(raw.trim());
+
+      const res = await fetch('/api/verifyAdmin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hash: inputHash }),
+      });
+
+      if (res.ok) {
+        const { valid } = await res.json();
+      if (valid) {
+        isAdminRef.current = true;
+        adminHashRef.current = inputHash;
+        awaitingAdminRef.current = false;
+        adminBruteGuard.reset();
         addLine('Admin Session: Authorized. Welcome back, @ARizzedKid', 'success');
+        } else {
+          awaitingAdminRef.current = false;
+          adminBruteGuard.fail();
+          addLine('⚠️ Incorrect Administrative Key. Session Terminated.', 'muted');
+          await reportIncident('FAILED_ADMIN_LOGIN', '[redacted]');
+        }
       } else {
         awaitingAdminRef.current = false;
-        addLine('⚠️ Incorrect Administrative Key. Session Terminated.', 'muted');
-        await reportIncident('FAILED_ADMIN_LOGIN', trimmed);
+        addLine('❌ Auth server error.', 'muted');
       }
       return;
     }
 
-    if (!sanitized) { addLine('⚠️ Invalid input detected', 'muted'); return; }
-    if (containsSQLI(sanitized)) { addLine('⚠️ Dangerous input blocked', 'muted'); await reportIncident('SQLI_ATTEMPT', raw); return; }
-    if (containsHTML(sanitized)) { addLine('⚠️ HTML content blocked', 'muted'); await reportIncident('XSS_ATTEMPT', raw); return; }
-    if (rateLimiter.isLimited('terminal-input')) { addLine('⚠️ Too many commands. Please wait.', 'muted'); return; }
+    const secError = runSecurityChecks(raw, sanitized);
+    if (secError) {
+      addLine(secError, 'muted');
 
-    if (inputHash === ADM_HASH) {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
-      addLine('Remote DB: Supabase Connected', 'success');
-      addLine('Admin Session: Authorized', 'success');
+      if (containsPathTraversal(raw)) await reportIncident('PATH_TRAVERSAL', raw);
+      else if (containsCommandInjection(raw)) await reportIncident('CMD_INJECTION', raw);
+      else if (containsProtoPoison(raw)) await reportIncident('PROTO_POISON', raw);
+      else if (containsSQLI(sanitized)) await reportIncident('SQLI_ATTEMPT', raw);
+      else if (containsHTML(sanitized)) await reportIncident('XSS_ATTEMPT', raw);
+      return;
+    }
+
+    if (rateLimiter.isLimited('terminal-input')) {
+      addLine('⚠️ Too many commands. Please wait.', 'muted');
       return;
     }
 
     if (trimmed === './adm1n') {
+      if (adminBruteGuard.isLocked()) {
+        addLine('⚠️ Admin login locked. Try again later.', 'muted');
+        return;
+      }
       awaitingAdminRef.current = true;
       addLine('Enter Admin Password:', 'bright');
       return;
@@ -170,12 +264,13 @@ export default function Terminal() {
       addLine('Connecting...', 'dim');
       try {
         const data = await fetchRemoteLogs();
-        if (!data || data.length === 0) { addLine('No security incidents recorded.', 'success'); }
-        else {
-          addLine('--- RECENT ---', 'bright');
+        if (!data || data.length === 0) {
+          addLine('No security incidents recorded.', 'success');
+        } else {
+          addLine('--- RECENT INCIDENTS ---', 'bright');
           data.forEach(log => {
             const time = new Date(log.created_at).toLocaleTimeString();
-            addLine(`[${time}] ${log.type}: ${log.payload}`, 'dim');
+            addLine(`[${time}] ${escapeHTML(log.type)}: ${escapeHTML(log.payload)}`, 'dim');
           });
         }
       } catch { addLine('❌ Error reaching remote server.', 'muted'); }
@@ -184,22 +279,33 @@ export default function Terminal() {
 
     if (trimmed === './clearlogs') {
       if (!isAdminRef.current) { addLine('⚠️ Access Denied: Admin session required.', 'muted'); return; }
+      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       addLine('Wiping database logs...', 'dim');
-      try { await clearRemoteLogs(); addLine('Database wiped successfully.', 'success'); }
-      catch (e) { addLine(`❌ Failed: ${e instanceof Error ? e.message : 'Unknown error'}`, 'muted'); }
+      try {
+        const res = await fetch('/api/clearLogs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash: adminHashRef.current }),
+        });
+        const { ok } = await res.json();
+        if (ok) addLine('Database wiped successfully.', 'success');
+        else addLine('❌ Access denied by server.', 'muted');
+      } catch (e) {
+        addLine(`❌ Failed: ${e instanceof Error ? escapeHTML(e.message) : 'Unknown error'}`, 'muted');
+      }
       return;
     }
 
     if (trimmed === './helpme') {
       addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./browse</span> ; browse the file', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./play</span> ; play', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./pause</span> ; pause', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./stop</span> ; stop', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./volume</span> ; update volume {0-100}', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./reset</span> ; reset to default', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./clear</span> ; clear the terminal', 'dim');
-      addLine('&nbsp;&nbsp;<span class="terminal-bright">./exit</span> ; close the terminal', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./browse</span> &nbsp;; browse audio file', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./play</span> &nbsp;&nbsp;; play audio', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./pause</span> &nbsp;; pause audio', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./stop</span> &nbsp;&nbsp;; stop audio', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./volume</span> &nbsp;; update volume {0-100}', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./reset</span> &nbsp;; reset to default', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./clear</span> &nbsp;; clear terminal', 'dim');
+      addLine('&nbsp;&nbsp;<span class="terminal-bright">./exit</span> &nbsp;&nbsp;; close terminal', 'dim');
 
     } else if (trimmed === './browse') {
       addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
@@ -236,9 +342,12 @@ export default function Terminal() {
       addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio?.src) {
-        audio.play().then(() => addLine(`▶ Playing${loadedFileNameRef.current ? ': ' + escapeHTML(loadedFileNameRef.current) : ''}`, 'success'))
+        audio.play()
+          .then(() => addLine(`▶ Playing${loadedFileNameRef.current ? ': ' + escapeHTML(loadedFileNameRef.current) : ''}`, 'success'))
           .catch(() => addLine('Failed to play audio', 'muted'));
-      } else { addLine('No audio loaded. Try to ./browse', 'muted'); }
+      } else {
+        addLine('No audio loaded. Try ./browse', 'muted');
+      }
 
     } else if (trimmed === './pause') {
       addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
@@ -263,15 +372,19 @@ export default function Terminal() {
       }
 
     } else if (trimmed.startsWith('./volume')) {
-      const parts = trimmed.split(' ');
       addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      const parts = trimmed.split(/\s+/);
       if (parts.length === 1) {
         const audio = getAudio();
         addLine(`${Math.round((audio?.volume || 0) * 100)}% (Current)`, 'bright');
       } else {
-        const val = parseInt(parts[1]);
-        if (!isNaN(val) && val >= 0 && val <= 100) { updateVolume(val); addLine(`Volume set to ${val}%`, 'success'); }
-        else { addLine('Usage: ./volume {0-100}', 'muted'); }
+        const val = parseInt(parts[1], 10);
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+          updateVolume(val);
+          addLine(`Volume set to ${val}%`, 'success');
+        } else {
+          addLine('Usage: ./volume {0-100}', 'muted');
+        }
       }
 
     } else if (trimmed === './clear') {
@@ -282,7 +395,10 @@ export default function Terminal() {
 
     } else {
       addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(trimmed)}`);
-      addLine(`⚠️ Command not found: <span class="terminal-bright">${escapeHTML(trimmed)}</span><br>I will <span class="terminal-bright">help you</span>, <span class="terminal-bright">just</span> try <span class="terminal-bright">./helpme</span> then`, 'muted');
+      addLine(
+        `⚠️ Command not found: <span class="terminal-bright">${escapeHTML(trimmed)}</span><br>Try <span class="terminal-bright">./helpme</span> for available commands`,
+        'muted'
+      );
     }
   }
 
@@ -306,6 +422,7 @@ export default function Terminal() {
           <line x1="12" y1="19" x2="20" y2="19"></line>
         </svg>
       </button>
+
       <div
         className={`terminal-container${isOpen ? ' visible' : ''}${isClosing ? ' closing' : ''}`}
         id="terminal-container"
@@ -325,11 +442,15 @@ export default function Terminal() {
             </svg>
           </button>
         </div>
+
         <div className="terminal-output" id="terminal-output" ref={outputRef}>
           {lines.map((l, i) => (
-            <div key={i} className={`terminal-line${l.type ? ' ' + l.type : ''}`} dangerouslySetInnerHTML={{ __html: l.html }} />
+            l.html
+              ? <div key={i} className={`terminal-line${l.type ? ' ' + l.type : ''}`} dangerouslySetInnerHTML={{ __html: l.html }} />
+              : <div key={i} className={`terminal-line${l.type ? ' ' + l.type : ''}`}>{l.text}</div>
           ))}
         </div>
+
         <div className="terminal-input-row">
           <span className="terminal-prompt">rizzed@cook13:~#</span>
           <input
@@ -339,7 +460,10 @@ export default function Terminal() {
             ref={inputRef}
             placeholder="./helpme"
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
             spellCheck={false}
+            maxLength={200}
             value={inputVal}
             onChange={e => setInputVal(e.target.value)}
             onKeyDown={async (e) => {
@@ -352,6 +476,7 @@ export default function Terminal() {
             }}
           />
         </div>
+
         <input
           type="file"
           ref={fileInputRef}
@@ -360,19 +485,30 @@ export default function Terminal() {
           aria-label="Load audio file"
           onChange={(e) => {
             const file = e.target.files?.[0];
+
             if (!file) return;
+
             if (!file.type.startsWith('audio/')) {
               addLine(`⚠️ Not an audio file: ${escapeHTML(file.name)}`, 'muted');
               if (fileInputRef.current) fileInputRef.current.value = '';
               return;
             }
+
+            if (file.size > 50 * 1024 * 1024) {
+              addLine('⚠️ File too large. Max 50MB.', 'muted');
+              if (fileInputRef.current) fileInputRef.current.value = '';
+              return;
+            }
+
+            const safeName = file.name.replace(/[^a-zA-Z0-9._\- ]/g, '_').substring(0, 100);
+
             const audio = getAudio();
             if (!audio) return;
             const url = URL.createObjectURL(file);
             audio.src = url;
             audio.loop = true;
-            loadedFileNameRef.current = file.name;
-            audio.play().then(() => addLine(`▶ Playing: ${escapeHTML(file.name)}`, 'success'));
+            loadedFileNameRef.current = safeName;
+            audio.play().then(() => addLine(`▶ Playing: ${escapeHTML(safeName)}`, 'success'));
             if (fileInputRef.current) fileInputRef.current.value = '';
           }}
         />
