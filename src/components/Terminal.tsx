@@ -222,7 +222,7 @@ export default function Terminal() {
         } else {
           awaitingAdminRef.current = false;
           adminBruteGuard.fail();
-          addLine('⚠️ Incorrect Administrative Key. Session Terminated.', 'muted');
+          addLine('⚠️ Incorrect Administrative Password. Session Terminated.', 'muted');
           await reportIncident('FAILED_ADMIN_LOGIN', '[redacted]');
         }
       } else {
