@@ -2224,7 +2224,8 @@ body.noscroll {
 .underline-text {
   position: relative;
   display: inline-block;
-  cursor: text;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .underline-text::after {
@@ -2233,7 +2234,8 @@ body.noscroll {
   left: 0;
   bottom: -2px;
   width: 100%;
-  border-bottom: 2px dashed #ffffff;
+  height: 100%;
+  border-bottom: 2px dashed #a0a0a0;
   transition: bottom 0.2s ease, opacity 0.2s ease;
   opacity: 0.8;
 }
