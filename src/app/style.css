@@ -830,7 +830,14 @@ body.noscroll {
 }
 
 @media (max-width: 555px) { .navbar { display: none; } }
-@media (max-width: 300px) { .navbar { display: none; } }
+@media (max-width: 300px) { 
+  .navbar { 
+    display: none;  
+  }
+  .terminal-container {
+    display: none !important;
+  }
+}
 
 
 /* discord */
@@ -2237,13 +2244,13 @@ body.noscroll {
   bottom: -2px;
   width: 100%;
   height: 100%;
-  border-bottom: 2px dashed #a0a0a0;
+  border-bottom: 2px dashed #ffffff;
   transition: bottom 0.2s ease, opacity 0.2s ease;
-  opacity: 0.8;
+  opacity: 0.4;
 }
 
 .copyright-link:hover .underline-text::after {
-  bottom: -4px;
+  bottom: -6px;
   opacity: 1;
 }
 
