@@ -786,6 +786,7 @@ body.noscroll {
   list-style: none;
   margin: 0;
   padding: 0;
+  user-select: none
 }
 
 .navbar-link {
@@ -2158,6 +2159,7 @@ body.noscroll {
   overflow: visible;
   min-width: 10.5ch;
   text-align: center;
+  user-select: none;
 }
 
 .footer-title {
