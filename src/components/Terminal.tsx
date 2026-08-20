@@ -260,7 +260,7 @@ export default function Terminal() {
     }
 
     if (trimmed === './logs') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       addLine('Connecting...', 'dim');
       try {
         const data = await fetchRemoteLogs();
@@ -279,7 +279,7 @@ export default function Terminal() {
 
     if (trimmed === './clearlogs') {
       if (!isAdminRef.current) { addLine('⚠️ Access Denied: Admin session required.', 'muted'); return; }
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       addLine('Wiping database logs...', 'dim');
       try {
         const res = await fetch('/api/clearLogs', {
@@ -297,7 +297,7 @@ export default function Terminal() {
     }
 
     if (trimmed === './helpme') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./browse</span> &nbsp;; browse audio file', 'dim');
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./play</span> &nbsp;&nbsp;; play audio', 'dim');
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./pause</span> &nbsp;; pause audio', 'dim');
@@ -308,7 +308,7 @@ export default function Terminal() {
       addLine('&nbsp;&nbsp;<span class="terminal-bright">./exit</span> &nbsp;&nbsp;; close terminal', 'dim');
 
     } else if (trimmed === './browse') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       addLine('Browsing...', 'dim');
 
       let browseTriggered = true;
@@ -339,7 +339,7 @@ export default function Terminal() {
       fileInputRef.current?.click();
 
     } else if (trimmed === './play') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio?.src) {
         audio.play()
@@ -350,18 +350,18 @@ export default function Terminal() {
       }
 
     } else if (trimmed === './pause') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       getAudio()?.pause();
       addLine('⏸ Paused', 'bright');
 
     } else if (trimmed === './stop') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio) { audio.pause(); audio.currentTime = 0; }
       addLine('⏹ Stopped', 'bright');
 
     } else if (trimmed === './reset') {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       const audio = getAudio();
       if (audio) {
         audio.src = '/audio/biteurtongue.mp3';
@@ -372,7 +372,7 @@ export default function Terminal() {
       }
 
     } else if (trimmed.startsWith('./volume')) {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(sanitized)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(sanitized)}`);
       const parts = trimmed.split(/\s+/);
       if (parts.length === 1) {
         const audio = getAudio();
@@ -394,7 +394,7 @@ export default function Terminal() {
       closeTerminal();
 
     } else {
-      addLine(`<span class="terminal-prompt">rizzed@cook13:~# </span>${escapeHTML(trimmed)}`);
+      addLine(`<span class="terminal-prompt">rizzed@kid:~# </span>${escapeHTML(trimmed)}`);
       addLine(
         `⚠️ Command not found: <span class="terminal-bright">${escapeHTML(trimmed)}</span><br>Try <span class="terminal-bright">./helpme</span> for available commands`,
         'muted'
@@ -452,7 +452,7 @@ export default function Terminal() {
         </div>
 
         <div className="terminal-input-row">
-          <span className="terminal-prompt">rizzed@cook13:~#</span>
+          <span className="terminal-prompt">rizzed@kid:~#</span>
           <input
             type="text"
             className="terminal-input"
