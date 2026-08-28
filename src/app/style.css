@@ -860,7 +860,7 @@ body.noscroll {
   position: relative;
   flex-direction: row;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: center;
   gap: 2rem;
   padding: 0 2rem;
   width: 650px;
@@ -980,7 +980,7 @@ body.noscroll {
   justify-content: center;
   gap: 1.5rem;
   flex-wrap: nowrap;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: visible;
 }
