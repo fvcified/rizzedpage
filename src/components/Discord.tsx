@@ -1,9 +1,8 @@
 'use client';
 /* eslint-disable react-hooks/immutability */
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface DiscordUser {
   id: string;
@@ -101,6 +100,22 @@ interface LanyardData {
   activities: Activity[];
   kv?: Record<string, string>;
 }
+
+interface LanyardHeartbeat {
+  op: 1;
+  d: { heartbeat_interval: number };
+}
+interface LanyardEvent {
+  op: 0;
+  t: 'INIT_STATE' | 'PRESENCE_UPDATE';
+  d: LanyardData;
+}
+interface LanyardOther {
+  op: number;
+  t?: string;
+  d?: unknown;
+}
+type LanyardSocketMessage = LanyardHeartbeat | LanyardEvent | LanyardOther;
 
 const VSCODE_IDS = ['383226320970055681', '1070165475000545280'];
 const ACTIVITY_TYPE_LABELS: Record<number, string> = {
@@ -236,22 +251,15 @@ export default function DiscordPresence() {
   const [activityNameOverflow, setActivityNameOverflow] = useState(false);
   const [songNameOverflow, setSongNameOverflow] = useState(false);
 
-  const progressBarRef    = useRef<HTMLDivElement>(null);
-  const timeDisplayRef    = useRef<HTMLSpanElement>(null);
-  const elapsedRef        = useRef<ReturnType<typeof setInterval> | null>(null);
-  const animFrameRef      = useRef<number>(0);
-  const fallbackTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wsRef             = useRef<WebSocket | null>(null);
-  const heartbeatRef      = useRef<ReturnType<typeof setInterval> | null>(null);
-  const reconnectRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reconnectAttemptsRef = useRef(0);
-  const isConnectingRef   = useRef(false);
-  const lastTrackIdRef    = useRef<string | null>(null);
-  const lastStartRef      = useRef<number | null>(null);
-  const spotifyTimestampsRef = useRef<{ start: number; end: number } | null>(null);
-  const userIdRef         = useRef<string>('');
-  const activityNameRef   = useRef<HTMLDivElement>(null);
-  const songNameRef       = useRef<HTMLDivElement>(null);
+  const progressBarRef       = useRef<HTMLDivElement>(null);
+  const timeDisplayRef       = useRef<HTMLSpanElement>(null);
+  const elapsedRef           = useRef<ReturnType<typeof setInterval> | null>(null);
+  const animFrameRef         = useRef<number>(0);
+  const fallbackTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTrackIdRef       = useRef<string | null>(null);
+  const lastStartRef         = useRef<number | null>(null);
+  const activityNameRef      = useRef<HTMLDivElement>(null);
+  const songNameRef          = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = activityNameRef.current;
@@ -263,28 +271,144 @@ export default function DiscordPresence() {
     if (el) setSongNameOverflow(el.scrollWidth > el.clientWidth);
   }, [spotify]);
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      const res = await fetch('/api/userAPI');
-      if (!res.ok) throw new Error('failed');
-      const json = await res.json();
-      const data: LanyardData = json.data;
+  useEffect(() => {
+    let isMounted = true;
+    let ws: WebSocket | null = null;
+    let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
+    let userId: string | null = null;
+
+    const bootstrap = async () => {
+      try {
+        const res = await fetch('/api/userAPI');
+        if (!res.ok) throw new Error('failed');
+        const json = await res.json();
+        userId = json.data.discord_user.id;
+        if (isMounted) connect();
+      } catch {
+      }
+    };
+
+    const applyPresence = (data: LanyardData) => {
       setUser(data.discord_user);
       setStatus(data.discord_status);
-      userIdRef.current = data.discord_user.id;
       renderActivity(data.activities);
-      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-        loadSpotify(data.discord_user.id);
-      }
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      applySpotify(data.spotify);
+    };
 
-  useEffect(() => {
-    fetchProfile();
-    const interval = setInterval(fetchProfile, 5000);
-    return () => clearInterval(interval);
-  }, [fetchProfile]);
+    const applySpotify = (sp: SpotifyData | null) => {
+      if (sp) {
+        if (!sp.track_id || !sp.song || !sp.artist || !sp.album_art_url || !sp.timestamps) {
+          setSpotifyState('inactive');
+          return;
+        }
+        if (!isValidSpotifyUrl(sp.album_art_url)) {
+          setSpotifyState('inactive');
+          return;
+        }
+        const trackChanged = sp.track_id !== lastTrackIdRef.current;
+        const timeChanged  = sp.timestamps.start !== lastStartRef.current;
+        if (!trackChanged && !timeChanged) return;
+
+        lastTrackIdRef.current = sp.track_id;
+        lastStartRef.current   = sp.timestamps.start;
+        setSpotify(sp);
+        setSpotifyState('active');
+
+        if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+        cancelAnimationFrame(animFrameRef.current);
+
+        const duration = sp.timestamps.end - sp.timestamps.start;
+        fallbackTimerRef.current = setTimeout(() => {
+          setSpotifyState('inactive');
+          lastTrackIdRef.current = null;
+          lastStartRef.current   = null;
+        }, duration + 3000);
+
+        updProgress(sp.timestamps);
+      } else {
+        if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+        cancelAnimationFrame(animFrameRef.current);
+        if (lastTrackIdRef.current !== null) {
+          fallbackTimerRef.current = setTimeout(() => {
+            setSpotifyState('inactive');
+            lastTrackIdRef.current = null;
+            lastStartRef.current   = null;
+          }, 3000);
+        } else {
+          setSpotifyState('inactive');
+        }
+      }
+    };
+
+    const scheduleReconnect = () => {
+      if (!isMounted) return;
+      reconnectAttempts++;
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+      setSpotifyState('reconnecting');
+      reconnectTimeout = setTimeout(connect, delay);
+    };
+
+    const connect = () => {
+      if (!userId || !isMounted) return;
+      ws = new WebSocket('wss://api.lanyard.rest/socket');
+
+      ws.onopen = () => {
+        reconnectAttempts = 0;
+      };
+
+      ws.onmessage = (event) => {
+        if (!isMounted) return;
+        let msg: LanyardSocketMessage;
+        try {
+          msg = JSON.parse(event.data) as LanyardSocketMessage;
+        } catch {
+          return;
+        }
+
+        if (msg.op === 1 && 'd' in msg && msg.d && typeof msg.d === 'object' && 'heartbeat_interval' in msg.d) {
+          const hb = msg.d as { heartbeat_interval: number };
+          const interval =
+            hb.heartbeat_interval >= 5000 && hb.heartbeat_interval <= 60000
+              ? hb.heartbeat_interval
+              : 30000;
+          heartbeatInterval = setInterval(() => {
+            if (ws?.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ op: 3 }));
+            }
+          }, interval);
+          ws?.send(JSON.stringify({ op: 2, d: { subscribe_to_id: userId } }));
+          return;
+        }
+
+        if (msg.op === 0 && 't' in msg && (msg.t === 'INIT_STATE' || msg.t === 'PRESENCE_UPDATE')) {
+          applyPresence(msg.d as LanyardData);
+        }
+      };
+
+      ws.onerror = () => {
+        ws?.close();
+      };
+
+      ws.onclose = () => {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        if (isMounted) scheduleReconnect();
+      };
+    };
+
+    bootstrap();
+
+    return () => {
+      isMounted = false;
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
+      cancelAnimationFrame(animFrameRef.current);
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+      ws?.close();
+    };
+  }, []);
 
   async function renderActivity(activities: Activity[]) {
     const act =
@@ -303,8 +427,7 @@ export default function DiscordPresence() {
     }
 
     if (act.assets?.large_image) {
-      const url = resolveAssetUrl(act.assets.large_image, act.application_id);
-      setActivityIcon(url);
+      setActivityIcon(resolveAssetUrl(act.assets.large_image, act.application_id));
       setActivityFallback(false);
     } else if (act.application_id) {
       const icon = await getAppIcon(act.application_id);
@@ -320,12 +443,7 @@ export default function DiscordPresence() {
       setActivityFallback(true);
     }
 
-    if (act.assets?.small_image) {
-      const url = resolveAssetUrl(act.assets.small_image, act.application_id);
-      setActivitySmallIcon(url);
-    } else {
-      setActivitySmallIcon('');
-    }
+    setActivitySmallIcon(act.assets?.small_image ? resolveAssetUrl(act.assets.small_image, act.application_id) : '');
 
     if (act.timestamps?.start) {
       const tick = () => setElapsed(fmElapsed(Date.now() - act.timestamps!.start!));
@@ -334,125 +452,6 @@ export default function DiscordPresence() {
     } else {
       setElapsed('');
     }
-  }
-
-  function loadSpotify(userId: string) {
-    if (isConnectingRef.current) return;
-    isConnectingRef.current = true;
-    if (reconnectRef.current) {
-      clearTimeout(reconnectRef.current);
-      reconnectRef.current = null;
-    }
-    if (wsRef.current) {
-      wsRef.current.onclose = null;
-      wsRef.current.onerror = null;
-      wsRef.current.onmessage = null;
-      try { wsRef.current.close(); } catch {}
-    }
-
-    const ws = new WebSocket('wss://api.lanyard.rest/socket');
-    wsRef.current = ws;
-
-    function startHeartbeat(ms: number) {
-      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-      heartbeatRef.current = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ op: 3 }));
-      }, ms);
-    }
-
-    function scheduleReconnect() {
-      if (reconnectRef.current || isConnectingRef.current) return;
-      reconnectAttemptsRef.current++;
-      const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-      setSpotifyState('reconnecting');
-      isConnectingRef.current = true;
-      reconnectRef.current = setTimeout(() => {
-        reconnectRef.current = null;
-        isConnectingRef.current = false;
-        loadSpotify(userId);
-      }, delay);
-    }
-
-    ws.onopen = () => {
-      reconnectAttemptsRef.current = 0;
-      isConnectingRef.current = false;
-      ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: userId } }));
-    };
-
-    ws.onerror = () => {
-      try { ws.close(); } catch {}
-    };
-
-    ws.onclose = () => {
-      isConnectingRef.current = false;
-      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-      scheduleReconnect();
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (!data || typeof data.op === 'undefined') return;
-
-        if (data.op === 1) {
-          const interval =
-            data.d?.heartbeat_interval >= 5000 && data.d?.heartbeat_interval <= 60000
-              ? data.d.heartbeat_interval
-              : 30000;
-          startHeartbeat(interval);
-          return;
-        }
-
-        const validEvents = ['INIT_STATE', 'PRESENCE_UPDATE'];
-        if (!validEvents.includes(data.t)) return;
-
-        const sp: SpotifyData | null = data.d?.spotify || null;
-
-        if (sp) {
-          if (!sp.track_id || !sp.song || !sp.artist || !sp.album_art_url || !sp.timestamps) {
-            setSpotifyState('inactive');
-            return;
-          }
-          if (!isValidSpotifyUrl(sp.album_art_url)) {
-            setSpotifyState('inactive');
-            return;
-          }
-          const trackChanged = sp.track_id !== lastTrackIdRef.current;
-          const timeChanged  = sp.timestamps.start !== lastStartRef.current;
-          if (!trackChanged && !timeChanged) return;
-
-          lastTrackIdRef.current        = sp.track_id;
-          lastStartRef.current          = sp.timestamps.start;
-          spotifyTimestampsRef.current  = sp.timestamps;
-          setSpotify(sp);
-          setSpotifyState('active');
-
-          if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-          cancelAnimationFrame(animFrameRef.current);
-
-          const duration = sp.timestamps.end - sp.timestamps.start;
-          fallbackTimerRef.current = setTimeout(() => {
-            setSpotifyState('inactive');
-            lastTrackIdRef.current = null;
-            lastStartRef.current   = null;
-          }, duration + 3000);
-
-          updProgress(sp.timestamps);
-        } else {
-          if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
-          cancelAnimationFrame(animFrameRef.current);
-          if (lastTrackIdRef.current !== null) {
-            fallbackTimerRef.current = setTimeout(() => {
-              setSpotifyState('inactive');
-              lastTrackIdRef.current = null;
-              lastStartRef.current   = null;
-            }, 3000);
-          } else {
-            setSpotifyState('inactive');
-          }
-        }
-      } catch {}
-    };
   }
 
   function updProgress(ts: { start: number; end: number }) {
