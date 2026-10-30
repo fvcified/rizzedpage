@@ -679,7 +679,7 @@ export default function DiscordPresence() {
               </>
             ) : (
               <div id="activity-off-status">
-                Currently not doin&apos; anythin&apos;
+                Currently not doin anythin
               </div>
             )}
           </div>
@@ -696,7 +696,7 @@ export default function DiscordPresence() {
               </>
             ) : spotifyState === 'inactive' || !spotify ? (
               <div id="off-status" style={{ display: 'block' }}>
-                Currently not listenin&apos; anythin&apos;
+                Currently not listenin anythin
               </div>
             ) : (
               <>
